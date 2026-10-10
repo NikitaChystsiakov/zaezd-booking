@@ -1,0 +1,522 @@
+.wrapper {
+  padding: 40px;
+  position: relative;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 14px 14px 16px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  color: var(--primary);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+}
+
+/* зона под картинку — всегда одинаковая высота */
+.cardImageWrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 70%; /* соотношение сторон ~4:3 */
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f3f4f6;
+  margin-bottom: 12px;
+}
+
+.cardImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardImagePlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* контент карточки */
+
+.cardMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardMeta {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.productTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--primary);
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+.dimensions {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.cardFooter {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.price {
+  font-weight: 600;
+  font-size: 17px;
+}
+
+/* ===== МОДАЛКА ===== */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  background: var(--bg);
+  border-radius: 20px;
+  padding: 32px;
+  width: min(90%, 520px);
+  max-height: 90vh;          /* модалка не выше экрана */
+  overflow-y: auto;          /* остальное прокручивается */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #000000;
+}
+
+.modalClose {
+  position: sticky;         
+  top: 0px;
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.modalImageWrapper {
+  width: 100%;
+  max-height: 320px;         /* общая высота под любую картинку */
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* картинка вписывается внутрь без обрезания */
+.modalImage {
+  max-height: 100%;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.modalTitle {
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.priceLarge {
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.btnLarge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fg);
+  color: var(--primary-contrast);
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid var(--fg);
+}
+
+.btnLarge:hover {
+  background: transparent;
+  color: var(--fg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.label {
+  color: var(--primary);
+}
+
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.filterGroup {
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.18s ease;
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--fg);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+}
+
+.select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  background-color: var(--bg);
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 44px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--fg);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+}
+
+.select option {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.resultsInfo {
+  margin-bottom: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding-left: 4px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 2px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.pageButton {
+  padding: 10px 18px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--bg);
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-size: 15px;
+  font-weight: 500;
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageButton:hover:not(:disabled) {
+  background-color: var(--border);
+  border-color: var(--fg);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.pageButton.active {
+  background-color: var(--fg);
+  color: var(--primary-contrast);
+  border-color: var(--fg);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.15);
+}
+
+.pageButton.active:hover {
+  background-color: var(--fg);
+  transform: translateY(-2px);
+}
+
+.pageInfo {
+  margin-left: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.noResults {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px dashed var(--border);
+  border-radius: 20px;
+  margin: 20px 0;
+}
+
+
+/* До 1200px — 3 карточки */
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+  }
+
+  .filters {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  
+  .filterGroup {
+    min-width: 180px;
+  }
+  
+  .searchInput,
+  .select {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+/* Планшеты — 2 карточки */
+@media (max-width: 900px) {
+  .wrapper {
+    padding: 32px 24px;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .title {
+    font-size: 24px;
+  }
+
+  .filters {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .filterGroup {
+    min-width: 100%;
+    width: 100%;
+  }
+  
+  .searchInput,
+  .select {
+    width: 100%;
+  }
+  
+  .pagination {
+    gap: 6px;
+  }
+  
+  .pageButton {
+    padding: 8px 14px;
+    min-width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .pageInfo {
+    margin-left: 16px;
+    font-size: 13px;
+  }
+
+}
+
+/* Телефоны — 1 карточка */
+@media (max-width: 600px) {
+  .wrapper {
+    padding: 24px 16px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .card {
+    padding: 14px;
+  }
+  .productTitle {
+    font-size: 17px;
+  }
+  .desc {
+    font-size: 13px;
+  }
+  .price {
+    font-size: 16px;
+  }
+  .modalCard {
+    width: 92%;
+    padding: 24px;
+    max-height: 90vh;
+  }
+  .modalImageWrapper {
+    max-height: 240px;
+  }
+  .modalTitle {
+    font-size: 20px;
+  }
+  .priceLarge {
+    font-size: 20px;
+  }
+
+  .filters {
+    padding: 12px 14px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .searchInput,
+  .select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  
+  .pagination {
+    margin-top: 32px;
+    padding-top: 20px;
+    gap: 4px;
+  }
+  
+  .pageButton {
+    padding: 8px 12px;
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .pageInfo {
+    margin-left: 12px;
+    font-size: 12px;
+    margin-top: 8px;
+    width: 100%;
+    text-align: center;
+    order: 3;
+  }
+  
+  .noResults {
+    padding: 40px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .pageButton {
+    flex: 1;
+  }
+  
+  .pageInfo {
+    margin: 8px 0 0 0;
+    text-align: center;
+  }
+}

@@ -1,0 +1,521 @@
+.wrapper {
+    min-height: 100%;
+    padding: 28px;
+    background: var(--background);
+    color: var(--fg);
+  }
+  
+  
+  .muted { color: var(--muted); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+  
+  .headerRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  
+  .headerRow .title {
+    flex: 1; 
+  }
+  
+  .title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  
+  .primaryBtn, .secondaryBtn, .editBtn, .iconBtn {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    font-weight: 900;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  
+  .primaryBtn {
+    background: var(--primary);
+    color: color-mix(in srgb, var(--bg) 10%, var(--border));
+  }
+  .primaryBtn:hover { transform: translateY(-1px); background: var(--primary-contrast); 
+  color: var(--primary);}
+  
+  .secondaryBtn { background: transparent; color: var(--primary); }
+  .secondaryBtn:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--bg) 88%, var(--bg)); }
+  
+  .editBtn { background: transparent; color: var(--primary); padding: 8px 10px; }
+  .editBtn:hover { background: color-mix(in srgb, var(--bg) 86%, var(--bg)); }
+  
+  .iconBtn {
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    background: transparent;
+    color: var(--text);
+  }
+  
+  .createForm {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+    background: color-mix(in srgb, var(--bg) 95%, var(--bg));
+  }
+  
+  .createGrid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr auto auto;
+    gap: 10px;
+    align-items: end;
+  }
+  
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--muted); font-weight: 800; }
+  
+  .field input, .field select {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: color-mix(in srgb, var(--bg) 92%, var(--bg));
+    color: var(--primary);
+    outline: none;
+  }
+  
+  .field input:focus, .field select:focus {
+    border-color: color-mix(in srgb, var(--border) 30%, var(--primary));
+  }
+  
+  .fieldInline { display: flex; align-items: center; gap: 10px; padding: 10px 6px; font-weight: 900; }
+  
+  .colorRow { display: grid; grid-template-columns: 44px 1fr; gap: 8px; align-items: center; }
+  .colorRow input[type="color"] { width: 44px; height: 40px; padding: 0; border-radius: 10px; border: 1px solid var(--border); background: transparent; }
+  
+  .hint { font-size: 12px; color: var(--muted); }
+  
+  .error { margin: 10px 2px 0; color: #ef4444; font-weight: 700; }
+  
+  /* table */
+  .tableWrapper {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: auto;
+  }
+  
+  .table { width: 100%; border-collapse: collapse; min-width: 840px; }
+  
+  .table thead th {
+    position: sticky; top: 0;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    text-align: left;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  
+  .actionsCell { text-align: right; white-space: nowrap; }
+  .emptyRow { text-align: center; padding: 20px; color: var(--muted); }
+  
+  .colorCell { display: inline-flex; align-items: center; gap: 10px; }
+  .colorDot {
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    display: inline-block;
+  }
+  
+  .badgeActive, .badgeInactive {
+    display: inline-flex;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  .badgeActive { background: rgba(34,197,94,.12); color:#16a34a; border:1px solid rgba(34,197,94,.25); }
+  .badgeInactive { background: rgba(239,68,68,.10); color:#ef4444; border:1px solid rgba(239,68,68,.22); }
+  
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 0;
+    cursor: pointer;
+  }
+  
+  .checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  
+  .checkbox input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 10px;
+    border: solid var(--primary); 
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -60%) rotate(45deg);
+  }
+
+  /* modal */
+  .modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 30, 31, 0.408);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+  }
+  
+  .modalCard {
+    width: min(860px, 96vw);
+    background: var(--bg);
+    color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    max-height: 90vh;
+    overflow: auto;
+  }
+  
+  .modalHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 6px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  
+  .modalTitle { font-size: 16px; font-weight: 900; }
+  .modalSubtitle { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  
+  .formGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 6px;
+  }
+  
+  .modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 6px 6px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+  }
+  
+@media (max-width: 1024px) {
+  .wrapper {
+    padding: 20px;
+  }
+  
+  .card {
+    padding: 16px;
+  }
+  
+  .createGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .fieldInline {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  
+  .primaryBtn {
+    grid-column: 1 / -1;
+  }
+  
+  .table {
+    min-width: 800px;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 890px) {
+  .wrapper {
+    padding: 16px;
+  }
+  
+  .headerRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .title {
+    font-size: 18px;
+  }
+  
+  .createGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .field {
+    min-width: 0;
+  }
+  
+  .colorRow {
+    grid-template-columns: 40px 1fr;
+  }
+  
+  .colorRow input[type="color"] {
+    width: 40px;
+    height: 36px;
+  }
+  
+  .tableWrapper {
+    display: none;
+  }
+  
+  .mobileList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  
+  .materialCard {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    background: color-mix(in srgb, var(--bg) 96%, var(--background));
+  }
+  
+  .materialHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  
+  .materialName {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  
+  .materialId {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  
+  .materialStatus {
+    flex-shrink: 0;
+  }
+  
+  .materialDetails {
+    margin-bottom: 16px;
+  }
+  
+  .detailRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  
+  .detailLabel {
+    font-weight: 600;
+    color: var(--muted);
+    min-width: 80px;
+    margin-right: 12px;
+  }
+  
+  .detailValue {
+    flex: 1;
+  }
+  
+  .materialActions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modalCard {
+    width: 95vw;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .wrapper {
+    padding: 12px;
+  }
+  
+  .card {
+    padding: 14px;
+  }
+  
+  .createGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .fieldInline {
+    justify-self: stretch;
+  }
+  
+  .materialCard {
+    padding: 12px;
+  }
+  
+  .materialName {
+    font-size: 15px;
+  }
+  
+  .detailRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .detailLabel {
+    min-width: auto;
+    margin-right: 0;
+  }
+  
+  .editBtn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 10px;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+  
+  .title {
+    font-size: 17px;
+  }
+  
+  .secondaryBtn,
+  .editBtn {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  
+  .field input {
+    padding: 8px 10px;
+  }
+  
+  .modalHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .iconBtn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .wrapper {
+    padding: 8px;
+  }
+  
+  .card {
+    padding: 10px;
+  }
+  
+  .title {
+    font-size: 16px;
+  }
+  
+  .createForm {
+    padding: 10px;
+  }
+  
+  .materialCard {
+    padding: 10px;
+  }
+  
+  .materialName {
+    font-size: 14px;
+  }
+  
+  .detailRow {
+    font-size: 13px;
+  }
+  
+  .editBtn {
+    padding: 7px;
+    font-size: 12px;
+  }
+}
+
+.mobileList {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryBtn,
+  .secondaryBtn,
+  .editBtn,
+  .iconBtn {
+    transition: none;
+  }
+  
+  .primaryBtn:hover,
+  .secondaryBtn:hover,
+  .editBtn:hover {
+    transform: none;
+  }
+  
+  .checkbox input[type="checkbox"] {
+    transition: none;
+  }
+}

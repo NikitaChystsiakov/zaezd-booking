@@ -1,0 +1,67 @@
+.viewport {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1000;
+    display: grid;
+    gap: 10px;
+    width: min(360px, calc(100vw - 32px));
+  }
+  
+  .toast {
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 10px 12px;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  
+  .title {
+    font-weight: 800;
+    font-size: 16px;
+  }
+  
+  .desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 5px;
+  }
+  
+  .close {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    color: var(--fg);
+    font-size: 20px;
+    line-height: 28px;
+    display: grid;
+    place-items: center;
+  }
+  
+  .close:hover {
+    background: color-mix(in oklab, var(--fg) 6%, var(--bg));
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

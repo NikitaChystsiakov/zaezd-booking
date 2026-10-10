@@ -1,0 +1,342 @@
+/* UserOrders.module.css */
+
+/* базовая карточка (у тебя на проекте используются глобальные переменные) */
+.card {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 16px);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 22px 22px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* ===== Header ===== */
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.titleWrap {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.subtitleSmall {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ===== Buttons ===== */
+.primaryBtn,
+.secondaryBtn {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease,
+    opacity 0.12s ease, filter 0.12s ease;
+  text-decoration: none;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--fg);
+  line-height: 1;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.primaryBtn {
+  --btn-bg: var(--accent, #111827); /* fallback, чтобы было видно в светлой теме */
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: #fff;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+.primaryBtn:focus-visible,
+.secondaryBtn:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.disabledLink {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ===== List / Order card ===== */
+.list {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.order {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  padding: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.order:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+}
+
+.orderTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.orderMain {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.orderTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orderTitle {
+  font-weight: 900;
+  color: var(--fg);
+}
+
+.orderMeta {
+  color: var(--fg);
+  font-size: 13px;
+  opacity: 0.92;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dot {
+  color: var(--muted);
+}
+
+.money {
+  font-weight: 900;
+}
+
+/* важное: чтобы справа кнопки не исчезали/не “пустой прямоугольник” */
+.actions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* muted в строке меты */
+.muted {
+  color: var(--muted);
+}
+
+/* ===== Status badge ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--border);
+}
+
+/* мягкие фоны статусов */
+.st_created { background: rgba(59, 130, 246, 0.14); }
+.st_in_production { background: rgba(245, 158, 11, 0.16); }
+.st_ready_to_ship { background: rgba(99, 102, 241, 0.16); }
+.st_in_transit { background: rgba(14, 165, 233, 0.16); }
+.st_delivered { background: rgba(34, 197, 94, 0.16); }
+.st_cancelled { background: rgba(239, 68, 68, 0.14); }
+
+/* ===== Items раскрытие ===== */
+.items {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.itemsList {
+  display: grid;
+  gap: 10px;
+}
+
+.itemRow {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.itemLeft {
+  min-width: 0;
+}
+
+.itemName {
+  font-weight: 900;
+  color: var(--fg);
+}
+
+.itemMuted {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.itemMeta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.itemTotal {
+  font-weight: 900;
+  white-space: nowrap;
+  color: var(--fg);
+}
+
+/* dark-mode safe backgrounds if you use .dark or html[data-theme="dark"] */
+:global(html[data-theme='dark']) .secondaryBtn:hover,
+:global(.dark) .secondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:global(html[data-theme='dark']) .itemRow,
+:global(.dark) .itemRow {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ===== Pager ===== */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.pagerInfo {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ===== Empty state ===== */
+.empty {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 26px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.emptyIcon {
+  font-size: 30px;
+  opacity: 0.9;
+}
+
+.emptyTitle {
+  margin-top: 8px;
+  font-weight: 900;
+  color: var(--fg);
+}
+
+.emptyText {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ===== Skeleton ===== */
+.skeletonList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.skeleton {
+  height: 56px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 720px) {
+  .card {
+    padding: 18px 16px 14px;
+  }
+  .orderTop {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
+  }
+}

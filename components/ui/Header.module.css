@@ -1,0 +1,150 @@
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .iconSun, .iconMoon { display: none; line-height: 0; }
+
+:global(html[data-theme='dark']) .iconSun { display: inline-flex; }
+:global(html[data-theme='light']) .iconMoon { display: inline-flex; }
+:global(html:not([data-theme])) .iconMoon { display: inline-flex; }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 64px;
+  }
+  
+  .brand {
+    font-weight: 800;
+    text-decoration: none;
+    font-size: 18px;
+    letter-spacing: .3px;
+  }
+  
+  .nav {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .nav a {
+    text-decoration: none;
+    opacity: .9;
+  }
+  
+  .nav a:hover {
+    opacity: 1;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .iconBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+  }
+  
+  .iconBtn:hover {
+    background: color-mix(in oklab, var(--fg) 6%, var(--bg));
+  }
+  
+  .burger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--fg);
+  }
+  
+  /* === АДАПТИВ === */
+  
+  /* 💻 до 900px — чуть компактнее */
+  @media (max-width: 900px) {
+    .inner {
+      height: 56px;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .nav a {
+      font-size: 14px;
+    }
+    .iconBtn {
+      width: 32px;
+      height: 32px;
+    }
+  }
+  
+  /* 📱 до 768px — мобильное меню */
+  @media (max-width: 768px) {
+    .inner {
+      height: 54px;
+      padding: 0 12px;
+    }
+  
+    .nav {
+      display: none;
+      position: fixed;
+      top: 54px;
+      right: 0;
+      left: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      animation: slideDown 0.2s ease;
+    }
+  
+    .open {
+      display: flex;
+    }
+  
+    .burger {
+      display: flex;
+    }
+  
+    .actions {
+      gap: 8px;
+    }
+  }
+  
+  /* 📱 до 480px — чуть компактнее бренд и прячем длинные кнопки */
+  @media (max-width: 480px) {
+    .brand {
+      font-size: 16px;
+    }
+  }
+  
+  /* === АНИМАЦИЯ ВЫПАДЕНИЯ === */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

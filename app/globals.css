@@ -1,0 +1,172 @@
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #111111;
+  --primary-contrast: #ffffff;
+  --container: 1100px;
+  --radius: 12px;
+  --footer-h: 140px;
+  --background: var(--bg);
+  --foreground: var(--fg);
+
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0a0a0a;
+    --fg: #ededed;
+    --border: #1f2937;
+    --muted: #9ca3af;
+    --primary: #ededed;
+    --primary-contrast: #0a0a0a;
+
+    --background: var(--bg);
+    --foreground: var(--fg);
+  }
+  
+  html:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--fg);
+  background: var(--bg);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.site {
+  min-height: 100svh;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr var(--footer-h);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Доступность */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Утилиты */
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: .15s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+  border-color: var(--primary);
+  border: 0px solid var(--border);
+  border-color: #0a0a0a;
+}
+
+.btn-primary:hover {
+  opacity: .9;
+}
+
+.btn-outline {
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  background: color-mix(in oklab, var(--fg) 6%, var(--bg));
+}
+
+.btn-ghost {
+  border: 1px solid var(--border);
+  background: transparent;
+}
+
+.btn-ghost:hover {
+  background: color-mix(in oklab, var(--fg) 6%, var(--bg));
+}
+
+button.btn {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 600;
+}
+
+@media (max-width: 800px) {
+  .site {
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
+/* РУЧНОЕ ПЕРЕКЛЮЧЕНИЕ ТЕМЫ */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --fg: #111111;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+  --primary: #111111;
+  --primary-contrast: #ffffff;
+
+  --background: var(--bg);
+  --foreground: var(--fg);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --fg: #ededed;
+  --border: #1f2937;
+  --muted: #9ca3af;
+  --primary: #ededed;
+  --primary-contrast: #0a0a0a;
+
+  --background: var(--bg);
+  --foreground: var(--fg);
+}
+
+body {
+  color: var(--fg);
+  background: var(--bg);
+}

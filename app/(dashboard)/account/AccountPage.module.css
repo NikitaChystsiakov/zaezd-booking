@@ -1,0 +1,18 @@
+.wrapper {
+    padding: 40px 0;
+  }
+  
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  
+  @media (max-width: 900px) {
+    .columns {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+  
