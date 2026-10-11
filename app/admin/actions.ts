@@ -9,7 +9,7 @@ import { z } from 'zod'
 import type { LeadStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/session'
-import { findConflicts, isDoubleBookingError } from '@/lib/availability'
+import { isDoubleBookingError } from '@/lib/availability'
 import { parseIcal } from '@/lib/ical'
 import { toDate } from '@/lib/dates'
 import { STATUS } from '@/lib/domain'
@@ -44,18 +44,34 @@ export async function setLeadStatus(leadId: string, status: LeadStatus): Promise
   const { session, lead } = await ownLead(leadId)
   if (lead.status === status) return { ok: true }
 
-  if (status === 'booked' && lead.unitId) {
-    const hard = (await findConflicts(lead.unitId, lead.checkIn, lead.checkOut, lead.id)).filter((c) => c.kind !== 'request')
-    if (hard.length) return { ok: false, error: `Даты уже заняты: ${hard[0].label}` }
-  }
+  const occupies = (s: LeadStatus) => s === 'booked' || s === 'done'
 
   try {
-    await prisma.$transaction([
-      prisma.lead.update({ where: { id: lead.id }, data: { status, contactedAt: lead.contactedAt ?? (status !== 'new' ? new Date() : null) } }),
-      prisma.leadEvent.create({ data: { leadId: lead.id, userId: session.userId, type: 'status', text: STATUS[status].label } }),
-    ])
+    const conflict = await prisma.$transaction(async (tx) => {
+      if (occupies(status) && lead.unitId) {
+        // Подтверждения по одному дому — строго по очереди: второй администратор дождётся первого
+        // и увидит занятые даты. Без очереди две транзакции упираются друг в друга (deadlock).
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lead.unitId}))`
+        const [booked, block] = await Promise.all([
+          tx.lead.findFirst({
+            where: { unitId: lead.unitId, id: { not: lead.id }, status: { in: ['booked', 'done'] }, checkIn: { lt: lead.checkOut }, checkOut: { gt: lead.checkIn } },
+            select: { name: true },
+          }),
+          tx.block.findFirst({
+            where: { unitId: lead.unitId, start: { lt: lead.checkOut }, end: { gt: lead.checkIn } },
+            select: { reason: true, feed: { select: { label: true } } },
+          }),
+        ])
+        if (booked) return booked.name
+        if (block) return block.feed ? `занято в «${block.feed.label}»` : (block.reason ?? 'даты закрыты')
+      }
+      await tx.lead.update({ where: { id: lead.id }, data: { status, contactedAt: lead.contactedAt ?? (status !== 'new' ? new Date() : null) } })
+      await tx.leadEvent.create({ data: { leadId: lead.id, userId: session.userId, type: 'status', text: STATUS[status].label } })
+      return null
+    })
+    if (conflict) return { ok: false, error: `Даты уже заняты: ${conflict}` }
   } catch (e) {
-    // Последняя линия обороны — ограничение в Postgres, если две брони подтверждают одновременно
+    // Последняя линия обороны — ограничение в Postgres
     if (isDoubleBookingError(e)) return { ok: false, error: 'Эти даты только что занял другой заезд' }
     throw e
   }

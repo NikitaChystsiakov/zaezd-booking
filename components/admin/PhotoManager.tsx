@@ -36,14 +36,20 @@ export function PhotoManager({ unitId, photos }: { unitId: string; photos: strin
             className="sr-only"
             aria-label="Загрузить фото"
             onChange={(e) => {
-              const files = e.target.files
-              if (!files?.length) return
-              const form = new FormData()
-              for (const f of files) form.append('photos', f)
+              const files = [...(e.target.files ?? [])]
+              if (!files.length) return
               setError(null)
+              // По одному файлу за запрос: несколько крупных фото разом упёрлись бы в лимит размера
               run(async () => {
-                const res = await uploadUnitPhotos(unitId, form)
-                if (!res.ok) setError(res.error)
+                for (const f of files) {
+                  const form = new FormData()
+                  form.append('photos', f)
+                  const res = await uploadUnitPhotos(unitId, form)
+                  if (!res.ok) {
+                    setError(`${f.name}: ${res.error}`)
+                    break
+                  }
+                }
                 if (input.current) input.current.value = ''
               })
             }}

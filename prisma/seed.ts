@@ -59,8 +59,10 @@ const houseRates = (included: number): SeedRate[] => [
 async function main() {
   await prisma.property.deleteMany()
 
+  // Постоянные id: после пересоздания демо-данных уже открытая сессия остаётся рабочей
   const property = await prisma.property.create({
     data: {
+      id: 'demo-butsevichi',
       slug: 'butsevichi',
       name: 'Буцевичи',
       kind: 'Конная усадьба',
@@ -87,6 +89,7 @@ async function main() {
 
   const admin = await prisma.user.create({
     data: {
+      id: 'demo-admin',
       propertyId: property.id,
       email: 'demo@gurtom.by',
       name: 'Администратор',
