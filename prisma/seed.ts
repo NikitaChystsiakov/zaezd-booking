@@ -91,7 +91,7 @@ async function main() {
     data: {
       id: 'demo-admin',
       propertyId: property.id,
-      email: 'demo@gurtom.by',
+      email: 'demo@zaezd.by',
       name: 'Администратор',
       role: 'owner',
       passwordHash: await bcrypt.hash('demo', 10),
@@ -239,7 +239,7 @@ async function main() {
   await prisma.block.create({ data: { unitId: units.shale.id, start: day(20), end: day(22), reason: 'Свои гости', feedId: google.id, externalId: 'demo-2' } })
   await prisma.block.create({ data: { unitId: units.shale.id, start: day(16), end: day(17), reason: 'Чистка дымохода' } })
 
-  console.log('Усадьба «Буцевичи» создана. Вход: demo@gurtom.by / demo')
+  console.log('Усадьба «Буцевичи» создана. Вход: demo@zaezd.by / demo')
 }
 
 main()

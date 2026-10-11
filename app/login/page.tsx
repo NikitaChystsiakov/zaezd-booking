@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { demoLogin, login } from './actions'
+import { login } from './actions'
 
 export default function LoginPage() {
   const [error, action, pending] = useActionState(login, null)
@@ -36,12 +36,13 @@ export default function LoginPage() {
               {pending ? 'Входим…' : 'Войти'}
             </button>
           </form>
-          <div className="my-6 flex items-center gap-3 text-xs text-ink-3">
-            <div className="h-px flex-1 bg-line" /> или <div className="h-px flex-1 bg-line" />
+          <div className="mt-6 rounded-2xl border border-line bg-surface p-4 text-sm">
+            <div className="font-semibold">Тестовый доступ</div>
+            <div className="mt-1 text-ink-2">
+              Почта <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">demo@zaezd.by</code>, пароль{' '}
+              <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">demo</code>
+            </div>
           </div>
-          <form action={demoLogin}>
-            <button className="btn-ghost h-12 w-full">Открыть демо — усадьба «Буцевичи»</button>
-          </form>
         </div>
       </div>
     </main>

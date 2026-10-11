@@ -14,14 +14,6 @@ export async function login(_: string | null, form: FormData): Promise<string | 
   redirect('/admin')
 }
 
-/** Вход в демо-аккаунт одной кнопкой — для портфолио и показа клиентам */
-export async function demoLogin() {
-  const user = await prisma.user.findUnique({ where: { email: 'demo@gurtom.by' } })
-  if (!user) redirect('/login')
-  await startSession(user)
-  redirect('/admin')
-}
-
 export async function logout() {
   await endSession()
   redirect('/login')
