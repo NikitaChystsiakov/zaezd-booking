@@ -1,56 +1,27 @@
-// app/layout.tsx
 import './globals.css'
-import type { Metadata } from 'next'
-import type { PropsWithChildren } from 'react'
-import { cookies } from 'next/headers'
-import Script from 'next/script'
+import type { Metadata, Viewport } from 'next'
+import { Golos_Text, Lora } from 'next/font/google'
 
-import { CartProvider } from '@/components/cart/CartProvider'
-import { ToastProvider } from '@/hooks/useToast'
+const golos = Golos_Text({ subsets: ['latin', 'cyrillic'], variable: '--font-golos', display: 'swap' })
+const lora = Lora({ subsets: ['latin', 'cyrillic'], variable: '--font-lora', style: ['normal', 'italic'], display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'WebSofa',
-  description: 'Каталог мебели',
+  title: { default: 'Гуртом — заявки для загородных площадок', template: '%s · Гуртом' },
+  description:
+    'Система заявок для усадеб и загородных комплексов: заявка с расчётом, карточка звонка для администратора, живое КП и «скинуться компанией».',
 }
 
-const themeInit = `
-(function() {
-  try {
-    var m = document.cookie.match(/(?:^|;\\s*)theme=(light|dark)/);
-    var cookieTheme = m && m[1];
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f5f3ee' },
+    { media: '(prefers-color-scheme: dark)', color: '#171715' },
+  ],
+}
 
-    var ls = localStorage.getItem('theme');
-    var t = (ls === 'light' || ls === 'dark') ? ls : cookieTheme;
-
-    if (!t) {
-      var mq = window.matchMedia('(prefers-color-scheme: dark)');
-      t = mq.matches ? 'dark' : 'light';
-    }
-
-    document.documentElement.dataset.theme = t;
-    document.documentElement.style.colorScheme = t;
-  } catch (e) {}
-})();
-`
-
-export default async function RootLayout({ children }: PropsWithChildren) {
-  const cookieStore = await cookies()
-  const cookieTheme = cookieStore.get('theme')?.value
-  const theme = cookieTheme === 'dark' ? 'dark' : 'light'
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" data-theme={theme} suppressHydrationWarning>
-      <head>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {themeInit}
-        </Script>
-      </head>
-
-      <body>
-        <CartProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </CartProvider>
-      </body>
+    <html lang="ru" className={`${golos.variable} ${lora.variable}`}>
+      <body className="min-h-dvh">{children}</body>
     </html>
   )
 }

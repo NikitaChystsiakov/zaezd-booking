@@ -1,38 +1,39 @@
 {
-  "name": "websofa2",
+  "name": "gurtom",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "next dev -p 4195",
+    "build": "next build",
+    "start": "next start -p 4195",
+    "test": "vitest run",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@pdf-lib/fontkit": "^1.1.1",
-    "@prisma/client": "^6.17.1",
-    "@types/pdfkit": "^0.17.3",
+    "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
-    "framer-motion": "^12.23.24",
-    "jose": "^6.1.0",
-    "lucide-react": "^0.561.0",
-    "next": "15.5.4",
-    "pdf-lib": "^1.17.1",
-    "pdfkit": "^0.17.2",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "stripe": "^20.0.0",
-    "zod": "^4.1.12"
+    "jose": "^6.2.12",
+    "lucide-react": "^1.55.0",
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@types/bcryptjs": "^3.0.0",
-    "@types/node": "^20.19.21",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.4",
-    "prisma": "^6.17.1",
-    "typescript": "^5"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
   }
 }

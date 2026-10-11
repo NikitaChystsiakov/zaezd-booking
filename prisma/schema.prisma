@@ -3,266 +3,267 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model users {
-  id             BigInt             @id @default(autoincrement())
-  role           Role
-  email          String             @unique
-  first_name     String?
-  second_name    String?
-  last_name      String?
-  phone          String?            @unique
-  created_at     DateTime           @default(now())
-  active         Boolean            @default(true)
-  password_hash  String?
-  orders_created orders[]           @relation("OrdersCreatedBy")
-  shipments      shipments[]        @relation("ShipmentsDriver")
-  manager_links  shop_managers[]    @relation("UserShopManagers")
-  stock_moves    shop_stock_moves[] @relation("StockMoveCreatedBy")
+// ───────────── Площадка и люди ─────────────
 
-  @@map("users")
+model Property {
+  id                String     @id @default(cuid())
+  slug              String     @unique
+  name              String
+  tagline           String?
+  description       String?
+  address           String?
+  phone             String?
+  timezone          String     @default("Europe/Minsk")
+  // Режимы контроля: что гость видит сам, а что узнаёт только от администратора
+  showAvailability  Boolean    @default(false)
+  priceMode         PriceMode  @default(from)
+  prepaymentPercent Int        @default(30)
+  callbackMinutes   Int        @default(60)
+  checkInTime       String     @default("15:00")
+  checkOutTime      String     @default("12:00")
+  telegramChatId    String?
+  /// Как перевести предоплату: карта, ЕРИП, счёт — показывается в КП
+  paymentDetails    String?
+  createdAt         DateTime   @default(now())
+  users             User[]
+  units             Unit[]
+  extras            Extra[]
+  leads             Lead[]
 }
 
-model shops {
-  id            BigInt             @id @default(autoincrement())
-  city          String
-  street        String
-  active        Boolean            @default(true)
-  orders        orders[]           @relation("OrdersAtShop")
-  shop_managers shop_managers[]
-  stock         shop_stock[]
-  stock_moves   shop_stock_moves[]
-
-  @@map("shops")
+model User {
+  id           String      @id @default(cuid())
+  propertyId   String
+  email        String      @unique
+  name         String
+  passwordHash String
+  role         Role        @default(admin)
+  createdAt    DateTime    @default(now())
+  property     Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  events       LeadEvent[]
 }
 
-model shop_managers {
-  id      BigInt @id @default(autoincrement())
-  user_id BigInt
-  shop_id BigInt
-  shop    shops  @relation(fields: [shop_id], references: [id], onDelete: Cascade)
-  user    users  @relation("UserShopManagers", fields: [user_id], references: [id], onDelete: Cascade)
+// ───────────── Что сдаётся и почём ─────────────
 
-  @@unique([shop_id, user_id])
-  @@index([user_id], map: "shop_managers_user_id_fkey")
-  @@map("shop_managers")
+model Unit {
+  id            String      @id @default(cuid())
+  propertyId    String
+  slug          String
+  name          String
+  kind          UnitKind
+  description   String?
+  capacity      Int
+  baseGuests    Int
+  photo         String?
+  sortOrder     Int         @default(0)
+  active        Boolean     @default(true)
+  // Секрет для iCal-ленты: Google Календарь, Куфар, Реалт подписываются на неё
+  icalToken     String      @unique @default(cuid())
+  property      Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rates         Rate[]
+  leads         Lead[]
+  blocks        Block[]
+  calendarFeeds CalendarFeed[]
+
+  @@unique([propertyId, slug])
 }
 
-model materials {
-  id       BigInt             @id @default(autoincrement())
-  name     String
-  color    String
-  price_per_mm3 Decimal @default(0.00000)
-  active   Boolean            @default(true)
-  variants product_variants[]
-
-  @@map("materials")
+/// Цена за ночь. Для каждой ночи выбирается подходящее правило с наибольшим priority.
+model Rate {
+  id              String    @id @default(cuid())
+  unitId          String
+  name            String
+  startDate       DateTime? @db.Date
+  endDate         DateTime? @db.Date
+  /// 0 = воскресенье … 6 = суббота; пустой массив = любой день
+  weekdays        Int[]
+  pricePerNight   Int
+  extraGuestPrice Int       @default(0)
+  priority        Int       @default(0)
+  unit            Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
 }
 
-model products {
-  id          BigInt             @id @default(autoincrement())
+model Extra {
+  id          String         @id @default(cuid())
+  propertyId  String
   name        String
-  description String
-  category    ProductCategory
-  active      Boolean            @default(true)
-  width_mm    Int
-  height_mm   Int
-  depth_mm    Int
-  base_price  Decimal            @default(0.0)
-  image_path  String? 
-  variants    product_variants[]
-
-  @@map("products")
+  description String?
+  priceType   ExtraPriceType
+  price       Int
+  active      Boolean        @default(true)
+  sortOrder   Int            @default(0)
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
-model product_variants {
-  id               BigInt             @id @default(autoincrement())
-  product_id       BigInt
-  material_id      BigInt
-  price            Decimal            @db.Decimal(12, 2)
-  active           Boolean            @default(true)
-  sku              String
-  order_items      order_items[]
-  material         materials          @relation(fields: [material_id], references: [id])
-  product          products           @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  shop_stock       shop_stock[]
-  shop_stock_moves shop_stock_moves[]
+// ───────────── Заявка → звонок → КП → предоплата ─────────────
 
-  @@unique([product_id, material_id])
-  @@index([product_id, active, price])
-  @@index([material_id], map: "product_variants_material_id_fkey")
-  @@map("product_variants")
+model Lead {
+  id            String       @id @default(cuid())
+  propertyId    String
+  unitId        String?
+  status        LeadStatus   @default(new)
+  source        LeadSource   @default(site)
+  occasion      String?
+  checkIn       DateTime     @db.Date
+  checkOut      DateTime     @db.Date
+  guests        Int
+  name          String
+  phone         String
+  contactVia    ContactVia   @default(call)
+  comment       String?
+  /// Расчёт на момент заявки: { total, nights[], extras[] }
+  quote         Json?
+  estimate      Int?
+  extraIds      String[]
+  createdAt     DateTime     @default(now())
+  contactedAt   DateTime?
+  property      Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit          Unit?        @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  events        LeadEvent[]
+  proposal      Proposal?
+
+  @@index([propertyId, status])
+  @@index([unitId, checkIn])
 }
 
-model shop_stock {
-  id                 BigInt           @id @default(autoincrement())
-  shop_id            BigInt
-  product_variant_id BigInt
-  quantity           Int              @default(0)
-  productVariant     product_variants @relation(fields: [product_variant_id], references: [id])
-  shop               shops            @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+model LeadEvent {
+  id        String        @id @default(cuid())
+  leadId    String
+  userId    String?
+  type      LeadEventType
+  text      String?
+  createdAt DateTime      @default(now())
+  lead      Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@unique([shop_id, product_variant_id])
-  @@index([shop_id])
-  @@index([product_variant_id], map: "shop_stock_product_variant_id_fkey")
-  @@map("shop_stock")
+  @@index([leadId, createdAt])
 }
 
-model shop_stock_moves {
-  id                 BigInt           @id @default(autoincrement())
-  shop_id            BigInt
-  product_variant_id BigInt
-  qty_change         Int
-  reason             StockMoveReason
-  created_at         DateTime         @default(now())
-  created_by         BigInt?
-  createdByUser      users?           @relation("StockMoveCreatedBy", fields: [created_by], references: [id])
-  productVariant     product_variants @relation(fields: [product_variant_id], references: [id])
-  shop               shops            @relation(fields: [shop_id], references: [id], onDelete: Cascade)
-
-  @@index([shop_id])
-  @@index([product_variant_id])
-  @@index([created_at])
-  @@index([created_by], map: "shop_stock_moves_created_by_fkey")
-  @@map("shop_stock_moves")
+/// Живое коммерческое предложение по ссылке
+model Proposal {
+  id                String         @id @default(cuid())
+  leadId            String         @unique
+  token             String         @unique @default(cuid())
+  /// [{ id, title, note, price, extraIds }]
+  options           Json
+  chosenOptionId    String?
+  message           String?
+  prepaymentAmount  Int
+  splitEnabled      Boolean        @default(true)
+  views             Int            @default(0)
+  lastViewedAt      DateTime?
+  acceptedAt        DateTime?
+  createdAt         DateTime       @default(now())
+  lead              Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  contributions     Contribution[]
 }
 
-model orders {
-  id                   BigInt              @id @default(autoincrement())
-  created_by           BigInt?
-  shop_id              BigInt?
-  customer_name        String?
-  customer_second_name String?
-  customer_last_name   String?
-  customer_phone       String?
-  customer_email       String?
-  delivery_type        DeliveryType
-  status               OrderStatus
-  note                 String?
-  created_at           DateTime            @default(now())
-  total_amount         Decimal             @default(0.00) @db.Decimal(12, 2)
-  address              delivery_addresses?
-  items                order_items[]
-  stripe_session_id String?  @unique
-  createdBy            users?              @relation("OrdersCreatedBy", fields: [created_by], references: [id])
-  shop                 shops?              @relation("OrdersAtShop", fields: [shop_id], references: [id])
-  shipment_links       shipment_orders[]
-  factory_worker_id    BigInt?
-
-  @@index([status])
-  @@index([created_at])
-  @@index([shop_id])
-  @@index([created_by], map: "orders_created_by_fkey")
-  @@map("orders")
+/// «Скинуться компанией»: каждый участник отмечает свою долю, администратор подтверждает
+model Contribution {
+  id          String             @id @default(cuid())
+  proposalId  String
+  name        String
+  amount      Int
+  status      ContributionStatus @default(pledged)
+  createdAt   DateTime           @default(now())
+  confirmedAt DateTime?
+  proposal    Proposal           @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }
 
-model delivery_addresses {
-  id        BigInt  @id @default(autoincrement())
-  order_id  BigInt  @unique
-  city      String
-  street    String
-  house     String
-  floor     String?
-  apartment String?
-  entrance  String?
-  order     orders  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+// ───────────── Занятость из других мест ─────────────
 
-  @@map("delivery_addresses")
+model Block {
+  id         String        @id @default(cuid())
+  unitId     String
+  start      DateTime      @db.Date
+  end        DateTime      @db.Date
+  reason     String?
+  feedId     String?
+  externalId String?
+  unit       Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  feed       CalendarFeed? @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  @@unique([feedId, externalId])
+  @@index([unitId, start])
 }
 
-model order_items {
-  id                 BigInt           @id @default(autoincrement())
-  order_id           BigInt
-  product_variant_id BigInt
-  unit_price         Decimal          @db.Decimal(12, 2)
-  quantity           Int
-  is_from_shop_stock Boolean          @default(false)
-  line_total         Decimal          @db.Decimal(12, 2)
-  order              orders           @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  productVariant     product_variants @relation(fields: [product_variant_id], references: [id])
-
-  @@index([order_id])
-  @@index([product_variant_id], map: "order_items_product_variant_id_fkey")
-  @@map("order_items")
+/// Внешний календарь, из которого подтягиваем занятость (Google, Куфар, Реалт…)
+model CalendarFeed {
+  id         String    @id @default(cuid())
+  unitId     String
+  label      String
+  url        String
+  lastSyncAt DateTime?
+  lastError  String?
+  unit       Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  blocks     Block[]
 }
 
-model shipments {
-  id          BigInt            @id @default(autoincrement())
-  driver_id   BigInt
-  planned_at  DateTime
-  status      ShipmentStatus
-  route_hint  String
-  started_at  DateTime
-  finished_at DateTime?
-  comment     String?
-  orders      shipment_orders[]
-  driver      users             @relation("ShipmentsDriver", fields: [driver_id], references: [id])
-
-  @@index([status])
-  @@index([planned_at])
-  @@index([driver_id], map: "shipments_driver_id_fkey")
-  @@map("shipments")
-}
-
-model shipment_orders {
-  id          BigInt    @id @default(autoincrement())
-  shipment_id BigInt
-  order_id    BigInt
-  order       orders    @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  shipment    shipments @relation(fields: [shipment_id], references: [id], onDelete: Cascade)
-
-  @@unique([shipment_id, order_id])
-  @@index([order_id], map: "shipment_orders_order_id_fkey")
-  @@map("shipment_orders")
-}
-
-/// *
-///  * ===================== ENUMS =====================
 enum Role {
-  customer
-  manager
-  driver
-  factory_worker
+  owner
   admin
+  staff
 }
 
-enum ProductCategory {
-  SOFA
-  ARMCHAIR
-  PUFF
-  BED
-  TABLE
-  CHAIR
-  OTHER
+enum PriceMode {
+  exact
+  from
+  hidden
 }
 
-enum OrderStatus {
+enum UnitKind {
+  house
+  room
+  venue
+  whole
+}
+
+enum ExtraPriceType {
+  per_stay
+  per_night
+  per_person
+  per_hour
+}
+
+enum LeadStatus {
+  new
+  contacted
+  proposal
+  booked
+  done
+  lost
+}
+
+enum LeadSource {
+  site
+  phone
+  messenger
+  other
+}
+
+enum ContactVia {
+  call
+  telegram
+  viber
+}
+
+enum LeadEventType {
   created
-  in_production
-  ready_to_ship
-  in_transit
-  delivered
-  cancelled
+  status
+  note
+  call
+  proposal_sent
+  proposal_viewed
+  proposal_accepted
+  contribution
 }
 
-enum DeliveryType {
-  pickup
-  home_delivery
-}
-
-enum ShipmentStatus {
-  planned
-  in_transit
-  delivered
-  cancelled
-}
-
-enum StockMoveReason {
-  receipt
-  sale
-  order_pickup
-  adjustment
+enum ContributionStatus {
+  pledged
+  marked_paid
+  confirmed
 }

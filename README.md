@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Гуртом
 
-## Getting Started
+Система заявок для усадеб и загородных площадок. Она превращает вопрос «сколько будет на 20 человек?» в предоплату и не теряет заявки по дороге.
 
-First, run the development server:
+Гуртом работает как второй пилот для администратора и не заменяет его. Заявка приходит уже с расчётом цены. Ко звонку всё известно. Через минуту после разговора гость получает живое коммерческое предложение, а его компания сама скидывается на предоплату.
+
+## Как это работает
+
+1. **Заявка на сайте площадки.** Гость выбирает дом, даты, количество гостей, повод и допуслуги. Цена считается по тарифам площадки: будни, выходные, сезоны, доплата за гостей сверх базы.
+2. **Карточка звонка.** Администратор видит:
+   - все детали заявки;
+   - пересечения с бронями, другими заявками и календарями Куфара, Реалта и Google;
+   - подсказки «о чём сказать при звонке».
+
+   Если с момента заявки прошло больше обещанного времени на перезвон, заявка подсвечивается.
+3. **Живое КП.** Три варианта уже посчитаны, администратор правит их под разговор и отправляет ссылку в Telegram или Viber. Видно, когда гость открыл предложение.
+4. **Скинуться компанией.** Организатор пересылает ссылку друзьям, и каждый отмечает свою долю предоплаты. Администратор подтверждает поступления, после чего даты закрепляются.
+
+### Последнее слово за владельцем
+
+В настройках владелец решает, что гость видит сам:
+- **Занятые даты:** показывать или скрывать.
+- **Цена:** точная, ориентировочная или «назовём при звонке».
+
+На демо-сайте режимы переключаются панелью сверху.
+
+## Демо
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Адрес | Что там |
+|---|---|
+| `/` | Страница продукта |
+| `/u/sosnovy-brod` | Сайт вымышленной усадьбы «Сосновый Брод» с формой заявки |
+| `/login` → «Посмотреть демо» | Админка: заявки, календарь, цены, настройки |
+| `/o/<token>` | КП для гостя со сбором предоплаты |
+| `/ical/<token>.ics` | Лента занятости для Google Календаря, Куфара и Реалта |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Демо-данные создаются от сегодняшней даты: свежие заявки, ближайшие заезды, КП, которое «только что открыли».
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Технологии
 
-## Learn More
+- **Next.js 16, React 19, TypeScript.** Server Components и Server Actions, без отдельного REST-слоя.
+- **PostgreSQL и Prisma.** Двойная бронь запрещена на уровне базы. Ограничение `EXCLUDE USING gist` по `daterange(checkIn, checkOut)` для заявок в статусах `booked` и `done` срабатывает, даже если два администратора нажмут «Бронь» одновременно (`prisma/migrations/*_init/migration.sql`).
+- **Расчёт цены — чистая функция** (`lib/quote.ts`). Её используют сайт, админка и КП, а сервер всегда пересчитывает цену сам и не доверяет клиенту.
+- **iCalendar (RFC 5545)** (`lib/ical.ts`). Своя реализация экспорта и разбора лент: склейка перенесённых строк, даты со временем, события без `DTEND`.
+- **Мультиарендность.** У каждой записи есть `propertyId`, и каждое серверное действие проверяет принадлежность данных площадке из сессии.
+- **Tailwind CSS 4.** Дизайн-токены, светлая и тёмная тема.
+- **Vitest.** Тесты расчёта цены и iCal.
 
-To learn more about Next.js, take a look at the following resources:
+## Запуск локально
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Нужны Node 20+ и PostgreSQL 14+.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Создайте файл настроек из примера и укажите в нём `DATABASE_URL` и `JWT_SECRET`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Установите зависимости:
+   ```bash
+   npm install
+   ```
+3. Создайте таблицы и ограничение против двойной брони:
+   ```bash
+   npx prisma migrate deploy
+   ```
+4. Заполните базу демо-усадьбой. Вход в админку: `demo@gurtom.by` / `demo`.
+   ```bash
+   npm run db:seed
+   ```
+5. Запустите проект, он откроется на http://localhost:4195:
+   ```bash
+   npm run dev
+   ```
+6. Тесты запускаются так:
+   ```bash
+   npm test
+   ```
 
-## Deploy on Vercel
+Уведомления в Telegram необязательны. Для них укажите `TELEGRAM_BOT_TOKEN` в `.env` и chat id в настройках площадки.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Структура
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+  page.tsx                 страница продукта
+  u/[slug]/                сайт площадки и создание заявки
+  o/[token]/               КП и сбор предоплаты
+  admin/                   заявки, карточка, календарь, цены, настройки
+  ical/[token]/            экспорт занятости
+lib/
+  quote.ts                 расчёт стоимости (+ тесты)
+  ical.ts                  iCal экспорт/импорт (+ тесты)
+  availability.ts          конфликты дат, занятость
+  callHints.ts             подсказки к звонку
+prisma/
+  schema.prisma, migrations/, seed.ts
+```
+
+## Дальше
+
+- ИИ-консьерж на сайте и в Telegram. Он будет пользоваться теми же функциями `quote` и проверкой занятости, поэтому не сможет выдумать цену.
+- Онлайн-предоплата через bePaid или Express-Pay (ЕРИП) для площадок, которые работают как ИП или ООО.
+- Автоматическая синхронизация лент по расписанию.
+- Добавление объектов и тарифов из админки.

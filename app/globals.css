@@ -1,172 +1,136 @@
-:root {
-  --bg: #ffffff;
-  --fg: #111111;
-  
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --primary: #111111;
-  --primary-contrast: #ffffff;
-  --container: 1100px;
-  --radius: 12px;
-  --footer-h: 140px;
-  --background: var(--bg);
-  --foreground: var(--fg);
+@import 'tailwindcss';
 
+/* ───────── Токены продукта «Гуртом» ───────── */
+:root {
+  --paper: #f5f3ee;
+  --surface: #fffefb;
+  --surface-2: #efece5;
+  --ink: #1c1c1a;
+  --ink-2: #55534d;
+  --ink-3: #8a877f;
+  --line: #e2ded4;
+  --line-strong: #cfc9bc;
+
+  --accent: #a6243a;
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e3e5;
+
+  --ok: #2f7a4b;
+  --ok-soft: #e1efe5;
+  --warn: #a8660f;
+  --warn-soft: #f7ebd6;
+  --info: #2f5fb3;
+  --info-soft: #e2eaf7;
+  --muted-soft: #ebe8e1;
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --bg: #0a0a0a;
-    --fg: #ededed;
-    --border: #1f2937;
-    --muted: #9ca3af;
-    --primary: #ededed;
-    --primary-contrast: #0a0a0a;
-
-    --background: var(--bg);
-    --foreground: var(--fg);
-  }
-  
-  html:not([data-theme]) {
+  :root:not([data-theme='light']) {
+    --paper: #171715;
+    --surface: #1f1f1c;
+    --surface-2: #282825;
+    --ink: #f0eee8;
+    --ink-2: #b9b6ae;
+    --ink-3: #85827a;
+    --line: #34332f;
+    --line-strong: #46443f;
+    --accent: #e0566c;
+    --accent-ink: #1a0a0d;
+    --accent-soft: #3a1e23;
+    --ok: #6cc08b;
+    --ok-soft: #1f3226;
+    --warn: #e2a24a;
+    --warn-soft: #3a2d18;
+    --info: #7ea6ec;
+    --info-soft: #1e2a40;
+    --muted-soft: #2a2a26;
     color-scheme: dark;
   }
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-muted-soft: var(--muted-soft);
+
+  --font-sans: var(--font-golos), system-ui, sans-serif;
+  --font-serif: var(--font-lora), Georgia, serif;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  color: var(--fg);
-  background: var(--bg);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-.site {
-  min-height: 100svh;
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr var(--footer-h);
+::selection {
+  background: var(--accent-soft);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Доступность */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
-/* Утилиты */
-.container {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 16px;
+/* Общие кирпичики, чтобы не дублировать длинные классы */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none cursor-pointer whitespace-nowrap;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-accent-ink hover:brightness-110;
+}
+@utility btn-ink {
+  @apply btn bg-ink text-paper hover:opacity-90;
+}
+@utility btn-ghost {
+  @apply btn border border-line-strong bg-surface text-ink hover:bg-surface-2;
+}
+@utility btn-sm {
+  @apply h-8 px-3 text-[13px];
+}
+@utility card {
+  @apply rounded-xl border border-line bg-surface;
+}
+@utility field {
+  @apply h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-ink-3 focus:border-ink focus:outline-none;
+}
+@utility label {
+  @apply mb-1.5 block text-[13px] font-medium text-ink-2;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+}
+@utility eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[0.08em] text-ink-3;
 }
 
-.muted {
-  color: var(--muted);
-}
-
-/* BUTTONS */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: .15s ease;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: var(--primary-contrast);
-  border-color: var(--primary);
-  border: 0px solid var(--border);
-  border-color: #0a0a0a;
-}
-
-.btn-primary:hover {
-  opacity: .9;
-}
-
-.btn-outline {
-  background-color: var(--bg);
-  border: 1px solid var(--border);
-}
-
-.btn-outline:hover {
-  background: color-mix(in oklab, var(--fg) 6%, var(--bg));
-}
-
-.btn-ghost {
-  border: 1px solid var(--border);
-  background: transparent;
-}
-
-.btn-ghost:hover {
-  background: color-mix(in oklab, var(--fg) 6%, var(--bg));
-}
-
-button.btn {
-  -webkit-appearance: none;
-  appearance: none;
-  font-family: inherit;
-  font-size: 1rem;
-  line-height: 1;
-  font-weight: 600;
-}
-
-@media (max-width: 800px) {
-  .site {
-    grid-template-rows: auto 1fr auto;
-  }
-}
-
-/* РУЧНОЕ ПЕРЕКЛЮЧЕНИЕ ТЕМЫ */
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #ffffff;
-  --fg: #111111;
-  --border: #e5e7eb;
-  --muted: #6b7280;
-  --primary: #111111;
-  --primary-contrast: #ffffff;
-
-  --background: var(--bg);
-  --foreground: var(--fg);
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0a0a0a;
-  --fg: #ededed;
-  --border: #1f2937;
-  --muted: #9ca3af;
-  --primary: #ededed;
-  --primary-contrast: #0a0a0a;
-
-  --background: var(--bg);
-  --foreground: var(--fg);
-}
-
-body {
-  color: var(--fg);
-  background: var(--bg);
+/* Штриховка для занятых из внешних календарей дат */
+.hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--line-strong) 0 2px,
+    transparent 2px 7px
+  );
 }
