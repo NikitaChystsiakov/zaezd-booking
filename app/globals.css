@@ -1,53 +1,105 @@
 @import 'tailwindcss';
 
-/* ───────── Токены продукта «Гуртом» ───────── */
+/*
+  Две поверхности:
+  — панель управления: светлая, спокойная, тёмная боковая панель в цветах усадьбы;
+  — страница бронирования для гостя: тема площадки (.theme-forest — «Буцевичи»: хвоя, лён, латунь).
+  Компоненты пишутся на общих токенах, тема меняет только значения.
+*/
+
 :root {
-  --paper: #f5f3ee;
-  --surface: #fffefb;
-  --surface-2: #efece5;
-  --ink: #1c1c1a;
-  --ink-2: #55534d;
-  --ink-3: #8a877f;
-  --line: #e2ded4;
-  --line-strong: #cfc9bc;
+  --paper: #f3f0e8;
+  --surface: #fffdf8;
+  --surface-2: #f0ebe1;
+  --ink: #1b221d;
+  --ink-2: #545b55;
+  --ink-3: #868b84;
+  --line: #e4ddd0;
+  --line-strong: #cfc6b5;
 
-  --accent: #a6243a;
-  --accent-ink: #ffffff;
-  --accent-soft: #f6e3e5;
+  /* Главное действие — тёмная хвоя */
+  --accent: #1f3328;
+  --accent-ink: #f3ece0;
+  --accent-soft: #e2e8e0;
 
-  --ok: #2f7a4b;
-  --ok-soft: #e1efe5;
-  --warn: #a8660f;
-  --warn-soft: #f7ebd6;
-  --info: #2f5fb3;
-  --info-soft: #e2eaf7;
-  --muted-soft: #ebe8e1;
+  --brass: #a9813c;
+  --brass-soft: #f3e9d4;
+  --alert: #b0402f;
+  --alert-soft: #f7e3dd;
+  --ok: #2f6b47;
+  --ok-soft: #e0ede4;
+  --warn: #9a6216;
+  --warn-soft: #f5e8d2;
+  --info: #2f5c8a;
+  --info-soft: #e1eaf4;
+  --muted-soft: #ebe6dc;
+
+  --side: #16201a;
+  --side-ink: #ece5d6;
+  --side-ink-2: #a7ab9f;
+  --side-line: #2a352d;
 
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --paper: #171715;
-    --surface: #1f1f1c;
-    --surface-2: #282825;
-    --ink: #f0eee8;
-    --ink-2: #b9b6ae;
-    --ink-3: #85827a;
-    --line: #34332f;
-    --line-strong: #46443f;
-    --accent: #e0566c;
-    --accent-ink: #1a0a0d;
-    --accent-soft: #3a1e23;
-    --ok: #6cc08b;
+    --paper: #131915;
+    --surface: #1a221c;
+    --surface-2: #222b24;
+    --ink: #ece6d8;
+    --ink-2: #b4b6ab;
+    --ink-3: #82877e;
+    --line: #2c362f;
+    --line-strong: #3d483f;
+    --accent: #d9c48f;
+    --accent-ink: #16201a;
+    --accent-soft: #2a3328;
+    --brass: #d2ad66;
+    --brass-soft: #33301f;
+    --alert: #e7826f;
+    --alert-soft: #3a2420;
+    --ok: #7cc196;
     --ok-soft: #1f3226;
-    --warn: #e2a24a;
-    --warn-soft: #3a2d18;
-    --info: #7ea6ec;
-    --info-soft: #1e2a40;
-    --muted-soft: #2a2a26;
+    --warn: #e0a656;
+    --warn-soft: #382c19;
+    --info: #85acdc;
+    --info-soft: #1d2a3a;
+    --muted-soft: #262e28;
+    --side: #0e1410;
+    --side-line: #232c25;
     color-scheme: dark;
   }
+}
+
+/* Тема страницы бронирования «Буцевичи»: тёмная хвоя, лён, коньячная кожа седла, латунь.
+   Тот же визуальный язык, что и в демо их нового сайта. */
+.theme-forest {
+  --forest: #1e2a22;
+  --forest-deep: #141c17;
+  --linen: #f3ece0;
+  --saddle: #8a4b2a;
+  --brass-hi: #c9a45c;
+  --brass-pale: #e2c88f;
+
+  /* Светлые панели (форма) — лён */
+  --paper: #f3ece0;
+  --surface: #faf6ee;
+  --surface-2: #ebe2d2;
+  --ink: #1e2a22;
+  --ink-2: #4c5a50;
+  --ink-3: #7f877c;
+  --line: #ddd2bf;
+  --line-strong: #c4b59c;
+  --accent: #1e2a22;
+  --accent-ink: #f3ece0;
+  --accent-soft: #e4dccb;
+  --brass: #8a4b2a;
+  --brass-soft: #efe0cc;
+  --alert: #a3402c;
+  --ok: #2f6b47;
+  --ok-soft: #dfeadf;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -62,6 +114,10 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);
   --color-warn: var(--warn);
@@ -69,9 +125,20 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-muted-soft: var(--muted-soft);
+  --color-side: var(--side);
+  --color-side-ink: var(--side-ink);
+  --color-side-ink-2: var(--side-ink-2);
+  --color-side-line: var(--side-line);
 
-  --font-sans: var(--font-golos), system-ui, sans-serif;
-  --font-serif: var(--font-lora), Georgia, serif;
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
+  --color-linen: var(--linen);
+  --color-saddle: var(--saddle);
+  --color-brass-hi: var(--brass-hi);
+  --color-brass-pale: var(--brass-pale);
+
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-cormorant), 'Times New Roman', serif;
 }
 
 html {
@@ -83,54 +150,81 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-}
-
-::selection {
-  background: var(--accent-soft);
+  text-rendering: optimizeLegibility;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brass);
   outline-offset: 2px;
 }
 
-/* Общие кирпичики, чтобы не дублировать длинные классы */
+input[type='number']::-webkit-inner-spin-button {
+  opacity: 0.4;
+}
+
+/* ───── Кирпичики ───── */
+
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none cursor-pointer whitespace-nowrap;
+  @apply inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold whitespace-nowrap transition-[background,opacity,transform] duration-150 active:translate-y-px disabled:pointer-events-none disabled:opacity-45;
 }
 @utility btn-primary {
-  @apply btn bg-accent text-accent-ink hover:brightness-110;
-}
-@utility btn-ink {
-  @apply btn bg-ink text-paper hover:opacity-90;
+  @apply btn bg-accent text-accent-ink hover:opacity-90;
 }
 @utility btn-ghost {
   @apply btn border border-line-strong bg-surface text-ink hover:bg-surface-2;
 }
+@utility btn-quiet {
+  @apply btn bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink;
+}
 @utility btn-sm {
-  @apply h-8 px-3 text-[13px];
+  @apply h-8 px-3.5 text-[13px];
 }
 @utility card {
-  @apply rounded-xl border border-line bg-surface;
+  @apply rounded-[18px] border border-line bg-surface;
 }
 @utility field {
-  @apply h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-ink-3 focus:border-ink focus:outline-none;
+  @apply h-11 w-full rounded-xl border border-line-strong bg-surface px-3.5 text-[15px] text-ink transition-colors placeholder:text-ink-3 focus:border-ink focus:outline-none;
 }
 @utility label {
-  @apply mb-1.5 block text-[13px] font-medium text-ink-2;
+  @apply mb-1.5 block text-[13px] font-semibold text-ink-2;
 }
 @utility chip {
-  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
 }
 @utility eyebrow {
-  @apply text-xs font-semibold uppercase tracking-[0.08em] text-ink-3;
+  @apply text-[11px] font-semibold tracking-[0.2em] uppercase;
+}
+@utility display {
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+/* Единая тёплая тонировка для фото разных лет — как на сайте усадьбы */
+.photo-grade {
+  filter: sepia(0.14) saturate(0.92) contrast(1.06) brightness(0.97);
+}
+
+/* Фото в арке */
+.arch {
+  border-radius: 999px 999px 0 0 / 46% 46% 0 0;
 }
 
 /* Штриховка для занятых из внешних календарей дат */
 .hatch {
-  background-image: repeating-linear-gradient(
-    135deg,
-    var(--line-strong) 0 2px,
-    transparent 2px 7px
-  );
+  background-image: repeating-linear-gradient(135deg, var(--line-strong) 0 2px, transparent 2px 7px);
+}
+
+/* Мелкая фактура зерна на тёмных секциях гостевой страницы */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

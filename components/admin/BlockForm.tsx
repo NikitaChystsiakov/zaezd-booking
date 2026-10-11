@@ -14,7 +14,7 @@ export function BlockForm({ units, today }: { units: { id: string; name: string 
 
   return (
     <form
-      className="grid gap-3 sm:grid-cols-2"
+      className="grid gap-4 sm:grid-cols-2"
       onSubmit={(e) => {
         e.preventDefault()
         run(async () => {
@@ -26,7 +26,7 @@ export function BlockForm({ units, today }: { units: { id: string; name: string 
       }}
     >
       <div className="sm:col-span-2">
-        <label className="label" htmlFor="bf-unit">Объект</label>
+        <label className="label" htmlFor="bf-unit">Дом</label>
         <select id="bf-unit" className="field" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
           {units.map((u) => (
             <option key={u.id} value={u.id}>{u.name}</option>
@@ -34,19 +34,21 @@ export function BlockForm({ units, today }: { units: { id: string; name: string 
         </select>
       </div>
       <div>
-        <label className="label" htmlFor="bf-start">С</label>
-        <input id="bf-start" type="date" className="field" value={start} min={today} onChange={(e) => setStart(e.target.value)} />
+        <label className="label" htmlFor="bf-start">Заезд</label>
+        <input id="bf-start" type="date" className="field" value={start} min={today} onChange={(e) => { setStart(e.target.value); if (e.target.value >= end) setEnd(addDays(e.target.value, 1)) }} />
       </div>
       <div>
-        <label className="label" htmlFor="bf-end">По (день выезда)</label>
+        <label className="label" htmlFor="bf-end">Выезд</label>
         <input id="bf-end" type="date" className="field" value={end} min={addDays(start, 1)} onChange={(e) => setEnd(e.target.value)} />
       </div>
       <div className="sm:col-span-2">
         <label className="label" htmlFor="bf-reason">Причина</label>
-        <input id="bf-reason" className="field" placeholder="Например: бронь по телефону, ремонт" value={reason} onChange={(e) => setReason(e.target.value)} />
+        <input id="bf-reason" className="field" placeholder="Например: бронь по телефону" value={reason} onChange={(e) => setReason(e.target.value)} />
       </div>
-      {error && <p className="text-sm text-accent sm:col-span-2">{error}</p>}
-      <button className="btn-ink sm:col-span-2" disabled={pending}>Закрыть даты</button>
+      {error && <p className="text-sm text-alert sm:col-span-2">{error}</p>}
+      <div className="sm:col-span-2">
+        <button className="btn-primary" disabled={pending}>Закрыть даты</button>
+      </div>
     </form>
   )
 }

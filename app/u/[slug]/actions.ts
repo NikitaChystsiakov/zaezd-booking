@@ -3,18 +3,20 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { quote } from '@/lib/quote'
-import { toDate, formatRange } from '@/lib/dates'
+import { toDate, formatRange, todayISO } from '@/lib/dates'
+import { findConflicts } from '@/lib/availability'
 import { toQuoteExtras, toQuoteRates, toQuoteUnit, CONTACT_VIA } from '@/lib/domain'
 import { appUrl, escapeHtml, notifyTelegram } from '@/lib/notify'
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
 const leadSchema = z.object({
-  unitId: z.string().nullable(),
+  unitId: z.string(),
   checkIn: isoDate,
   checkOut: isoDate,
-  guests: z.number().int().min(1).max(500),
-  extraIds: z.array(z.string()).max(30),
+  guests: z.number().int().min(1).max(200),
+  children: z.number().int().min(0).max(100),
+  picks: z.array(z.object({ id: z.string(), qty: z.number().int().min(1).max(100) })).max(40),
   occasion: z.string().max(80).nullable(),
   name: z.string().trim().min(2, 'Как к вам обращаться?').max(80),
   phone: z
@@ -30,7 +32,7 @@ const leadSchema = z.object({
 })
 
 export type LeadInput = z.infer<typeof leadSchema>
-export type LeadResult = { ok: true } | { ok: false; error: string }
+export type LeadResult = { ok: true; total: number | null } | { ok: false; error: string }
 
 export async function createLead(slug: string, input: LeadInput): Promise<LeadResult> {
   const parsed = leadSchema.safeParse(input)
@@ -42,57 +44,64 @@ export async function createLead(slug: string, input: LeadInput): Promise<LeadRe
     where: { slug },
     include: { extras: { where: { active: true } } },
   })
-  if (!property) return { ok: false, error: 'Площадка не найдена' }
+  if (!property) return { ok: false, error: 'Усадьба не найдена' }
 
-  const unit = data.unitId
-    ? await prisma.unit.findFirst({ where: { id: data.unitId, propertyId: property.id, active: true }, include: { rates: true } })
-    : null
-  if (data.unitId && !unit) return { ok: false, error: 'Объект не найден' }
+  const today = todayISO(property.timezone)
+  if (data.checkIn < today) return { ok: false, error: 'Дата заезда уже прошла' }
 
-  const extraIds = data.extraIds.filter((id) => property.extras.some((e) => e.id === id))
+  const unit = await prisma.unit.findFirst({ where: { id: data.unitId, propertyId: property.id, active: true }, include: { rates: true } })
+  if (!unit) return { ok: false, error: 'Дом не найден' }
+
+  // Если гость видит занятость, не принимаем заявку на занятые даты. Если не видит — примем, администратор разберётся.
+  if (property.showAvailability) {
+    const busy = (await findConflicts(unit.id, toDate(data.checkIn), toDate(data.checkOut))).filter((c) => c.kind !== 'request')
+    if (busy.length) return { ok: false, error: 'Эти даты уже заняты — выберите другие' }
+  }
 
   // Цену всегда пересчитываем на сервере: клиенту не доверяем
-  const q = unit
-    ? quote({
-        unit: toQuoteUnit(unit),
-        rates: toQuoteRates(unit.rates),
-        extras: toQuoteExtras(property.extras),
-        checkIn: data.checkIn,
-        checkOut: data.checkOut,
-        guests: data.guests,
-        extraIds,
-      })
-    : null
-  if (unit && q && data.guests > unit.capacity) return { ok: false, error: `${unit.name} вмещает до ${unit.capacity} гостей` }
+  const picks = data.picks.filter((p) => property.extras.some((e) => e.id === p.id))
+  const q = quote({
+    unit: toQuoteUnit(unit),
+    rates: toQuoteRates(unit.rates),
+    extras: toQuoteExtras(property.extras),
+    picks,
+    checkIn: data.checkIn,
+    checkOut: data.checkOut,
+    guests: data.guests,
+    holidays: property.holidays,
+    today,
+  })
+  if (data.guests > unit.capacity) return { ok: false, error: `${unit.name} вмещает до ${unit.capacity} гостей` }
 
   const lead = await prisma.lead.create({
     data: {
       propertyId: property.id,
-      unitId: unit?.id ?? null,
+      unitId: unit.id,
       occasion: data.occasion,
       checkIn: toDate(data.checkIn),
       checkOut: toDate(data.checkOut),
       guests: data.guests,
+      children: Math.min(data.children, data.guests),
       name: data.name,
       phone: data.phone,
       contactVia: data.contactVia,
       comment: data.comment || null,
-      extraIds,
-      quote: q ?? undefined,
-      estimate: q?.ok ? q.total : null,
+      extras: picks,
+      quote: q,
+      estimate: q.ok ? q.total : null,
       events: { create: { type: 'created', text: 'Заявка с сайта' } },
     },
   })
 
-  const extrasNames = property.extras.filter((e) => extraIds.includes(e.id)).map((e) => e.name)
+  const extrasLine = q.extras.map((l) => (l.qty > 1 ? `${l.name} × ${l.qty}` : l.name)).join(', ')
   await notifyTelegram(
     property.telegramChatId,
     [
-      `<b>Новая заявка · ${escapeHtml(data.occasion ?? 'без повода')}</b>`,
+      `<b>Новая заявка · ${escapeHtml(unit.name)}</b>`,
+      `${formatRange(data.checkIn, data.checkOut)}, ${data.guests} гостей${data.occasion ? ` · ${escapeHtml(data.occasion)}` : ''}`,
       `${escapeHtml(data.name)}, ${escapeHtml(data.phone)} — ${CONTACT_VIA[data.contactVia]}`,
-      `${formatRange(data.checkIn, data.checkOut)}, ${data.guests} гостей, ${escapeHtml(unit?.name ?? 'объект не выбран')}`,
-      extrasNames.length ? `Допы: ${escapeHtml(extrasNames.join(', '))}` : '',
-      q?.ok ? `Расчёт: ${q.total} BYN` : '',
+      extrasLine ? `Услуги: ${escapeHtml(extrasLine)}` : '',
+      q.ok ? `Расчёт: ${q.total} BYN` : '',
       data.comment ? `«${escapeHtml(data.comment)}»` : '',
       appUrl(`/admin/leads/${lead.id}`),
     ]
@@ -100,5 +109,5 @@ export async function createLead(slug: string, input: LeadInput): Promise<LeadRe
       .join('\n'),
   )
 
-  return { ok: true }
+  return { ok: true, total: q.ok ? q.total : null }
 }

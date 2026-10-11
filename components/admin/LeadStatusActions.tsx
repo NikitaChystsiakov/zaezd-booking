@@ -6,23 +6,24 @@ import { setLeadStatus } from '@/app/admin/actions'
 
 const NEXT: Record<LeadStatus, { status: LeadStatus; label: string; primary?: boolean }[]> = {
   new: [
-    { status: 'contacted', label: 'Созвонились', primary: true },
+    { status: 'contacted', label: 'Связались, ждём задаток', primary: true },
+    { status: 'booked', label: 'Задаток получен — подтвердить' },
     { status: 'lost', label: 'Отказ' },
   ],
   contacted: [
-    { status: 'booked', label: 'Предоплата получена', primary: true },
+    { status: 'booked', label: 'Задаток получен — подтвердить', primary: true },
     { status: 'lost', label: 'Отказ' },
   ],
   proposal: [
-    { status: 'booked', label: 'Предоплата получена', primary: true },
-    { status: 'contacted', label: 'Вернуть в «Созвонились»' },
+    { status: 'booked', label: 'Задаток получен — подтвердить', primary: true },
     { status: 'lost', label: 'Отказ' },
   ],
   booked: [
     { status: 'done', label: 'Заезд состоялся', primary: true },
-    { status: 'proposal', label: 'Снять бронь' },
+    { status: 'contacted', label: 'Снять подтверждение' },
+    { status: 'lost', label: 'Гость отменил' },
   ],
-  done: [{ status: 'booked', label: 'Вернуть в «Бронь»' }],
+  done: [{ status: 'booked', label: 'Вернуть в подтверждённые' }],
   lost: [{ status: 'new', label: 'Вернуть в работу', primary: true }],
 }
 
@@ -37,7 +38,7 @@ export function LeadStatusActions({ leadId, status, hasConflicts }: { leadId: st
           <button
             key={n.status}
             disabled={pending}
-            className={n.primary ? 'btn-primary' : 'btn-ghost'}
+            className={`w-full ${n.primary ? 'btn-primary' : n.status === 'lost' ? 'btn-quiet' : 'btn-ghost'}`}
             onClick={() =>
               start(async () => {
                 setError(null)
@@ -51,9 +52,13 @@ export function LeadStatusActions({ leadId, status, hasConflicts }: { leadId: st
         ))}
       </div>
       {hasConflicts && NEXT[status].some((n) => n.status === 'booked') && !error && (
-        <p className="mt-3 text-xs text-ink-3">Бронь не пройдёт, пока даты пересекаются с занятыми — система не даст продать их дважды.</p>
+        <p className="mt-3 text-xs leading-relaxed text-ink-3">Пока даты пересекаются с занятыми, подтвердить не получится — одни даты не продаются дважды.</p>
       )}
-      {error && <p className="mt-3 text-sm text-accent" role="alert">{error}</p>}
+      {error && (
+        <p className="mt-3 text-sm text-alert" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

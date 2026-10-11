@@ -16,17 +16,12 @@ export function NoteForm({ leadId }: { leadId: string }) {
 
   return (
     <div>
-      <textarea
-        className="field h-auto min-h-20 py-2"
-        placeholder="Итог звонка или заметка: о чём договорились, что важно гостю"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-      <div className="mt-2 flex gap-2">
-        <button className="btn-ink btn-sm flex-1" disabled={pending || !text.trim()} onClick={() => save('call')}>
+      <textarea className="field h-auto min-h-24 py-3" placeholder="О чём договорились с гостем" value={text} onChange={(e) => setText(e.target.value)} aria-label="Заметка к заявке" />
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <button className="btn-primary btn-sm" disabled={pending || !text.trim()} onClick={() => save('call')}>
           Итог звонка
         </button>
-        <button className="btn-ghost btn-sm flex-1" disabled={pending || !text.trim()} onClick={() => save('note')}>
+        <button className="btn-ghost btn-sm" disabled={pending || !text.trim()} onClick={() => save('note')}>
           Заметка
         </button>
       </div>

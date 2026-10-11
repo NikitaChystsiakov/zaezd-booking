@@ -8,10 +8,10 @@ export function FeedControls({ feedId }: { feedId: string }) {
   const [pending, run] = useTransition()
   return (
     <span className="flex gap-1">
-      <button className="grid size-8 place-items-center rounded-md text-ink-2 hover:bg-surface-2" aria-label="Синхронизировать" disabled={pending} onClick={() => run(async () => void (await syncFeed(feedId)))}>
+      <button className="grid size-8 place-items-center rounded-full text-ink-2 hover:bg-surface-2" aria-label="Обновить" title="Обновить" disabled={pending} onClick={() => run(async () => void (await syncFeed(feedId)))}>
         <RefreshCw size={14} className={pending ? 'animate-spin' : ''} />
       </button>
-      <button className="grid size-8 place-items-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-accent" aria-label="Удалить" disabled={pending} onClick={() => run(async () => void (await removeFeed(feedId)))}>
+      <button className="grid size-8 place-items-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-alert" aria-label="Отключить календарь" title="Отключить" disabled={pending} onClick={() => confirm('Отключить этот календарь? Занятость из него пропадёт.') && run(async () => void (await removeFeed(feedId)))}>
         <Trash2 size={14} />
       </button>
     </span>
@@ -36,16 +36,16 @@ export function AddFeedForm({ unitId }: { unitId: string }) {
         })
       }}
     >
-      <select className="field h-9 w-32" value={label} onChange={(e) => setLabel(e.target.value)} aria-label="Откуда календарь">
+      <select className="field h-10 w-32" value={label} onChange={(e) => setLabel(e.target.value)} aria-label="Откуда календарь">
         <option>Куфар</option>
         <option>Реалт</option>
         <option>Google</option>
         <option>Booking</option>
         <option>Другое</option>
       </select>
-      <input className="field h-9 min-w-48 flex-1" placeholder="https://… .ics" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="Ссылка на iCal" />
-      <button className="btn-ghost btn-sm h-9" disabled={pending || !url}>Добавить</button>
-      {error && <p className="w-full text-xs text-accent">{error}</p>}
+      <input className="field h-10 min-w-48 flex-1" placeholder="Ссылка на календарь, https://… .ics" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="Ссылка на iCal" />
+      <button className="btn-ghost h-10" disabled={pending || !url}>Подключить</button>
+      {error && <p className="w-full text-xs text-alert">{error}</p>}
     </form>
   )
 }

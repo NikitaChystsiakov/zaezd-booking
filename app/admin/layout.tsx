@@ -1,44 +1,44 @@
-import Link from 'next/link'
-import { ExternalLink, LogOut } from 'lucide-react'
+import type { Metadata } from 'next'
+import { ArrowUpRight, LogOut } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/session'
 import { logout } from '@/app/login/actions'
-import { Logo } from '@/components/Logo'
 import { AdminNav } from '@/components/admin/AdminNav'
+
+export const metadata: Metadata = { title: { default: 'Панель управления', template: '%s · Панель управления' } }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession()
   const [property, user, newCount] = await Promise.all([
-    prisma.property.findUniqueOrThrow({ where: { id: session.propertyId }, select: { name: true, slug: true } }),
-    prisma.user.findUniqueOrThrow({ where: { id: session.userId }, select: { name: true } }),
+    prisma.property.findUniqueOrThrow({ where: { id: session.propertyId }, select: { name: true, kind: true, slug: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: session.userId }, select: { name: true, email: true } }),
     prisma.lead.count({ where: { propertyId: session.propertyId, status: 'new' } }),
   ])
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[232px_1fr]">
-      <aside className="border-b border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between px-4 py-4 lg:block lg:px-5 lg:py-6">
-          <Link href="/admin">
-            <Logo />
-          </Link>
-          <div className="hidden lg:mt-6 lg:block">
-            <div className="eyebrow">Площадка</div>
-            <div className="mt-1 font-medium">{property.name}</div>
+    <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+      <aside className="bg-side text-side-ink lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
+        <div className="flex items-center justify-between gap-4 px-5 pt-5 pb-4 lg:block lg:px-6 lg:pt-8 lg:pb-8">
+          <div>
+            {property.kind && <div className="eyebrow text-side-ink-2">{property.kind}</div>}
+            <div className="display text-[30px] leading-none">{property.name}</div>
           </div>
+          <a href={`/u/${property.slug}`} target="_blank" className="inline-flex items-center gap-1 text-[13px] text-side-ink-2 hover:text-side-ink lg:mt-3">
+            Сайт бронирования <ArrowUpRight size={13} />
+          </a>
         </div>
         <AdminNav newCount={newCount} />
-        <div className="hidden space-y-1 border-t border-line px-3 py-4 text-sm lg:mt-auto lg:block">
-          <a href={`/u/${property.slug}`} target="_blank" className="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-surface-2 hover:text-ink">
-            <ExternalLink size={15} /> Сайт площадки
-          </a>
-          <form action={logout}>
-            <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-surface-2 hover:text-ink">
-              <LogOut size={15} /> Выйти ({user.name})
+        <div className="hidden border-t border-side-line px-6 py-5 lg:mt-auto lg:block">
+          <div className="text-sm font-semibold">{user.name}</div>
+          <div className="truncate text-xs text-side-ink-2">{user.email}</div>
+          <form action={logout} className="mt-3">
+            <button className="inline-flex items-center gap-1.5 text-[13px] text-side-ink-2 hover:text-side-ink">
+              <LogOut size={14} /> Выйти
             </button>
           </form>
         </div>
       </aside>
-      <main className="min-w-0 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+      <main className="min-w-0 px-4 py-7 sm:px-8 lg:px-12 lg:py-10">{children}</main>
     </div>
   )
 }

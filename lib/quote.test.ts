@@ -1,78 +1,134 @@
+// Тесты на реальных ценах дома КАНТРИ (verhom.by, раздел «Услуги и цены»)
+
 import { describe, expect, it } from 'vitest'
-import { pickRate, quote, type QuoteInput, type QuoteRate } from './quote'
+import { quote, depositFor, type QuoteExtra, type QuoteInput, type QuoteRate } from './quote'
 
-const base: QuoteRate = { name: 'Будни', startDate: null, endDate: null, weekdays: [], pricePerNight: 300, extraGuestPrice: 40, priority: 0 }
-const weekend: QuoteRate = { name: 'Выходные', startDate: null, endDate: null, weekdays: [5, 6], pricePerNight: 450, extraGuestPrice: 40, priority: 10 }
-const newYear: QuoteRate = { name: 'Новый год', startDate: '2026-12-30', endDate: '2027-01-01', weekdays: [], pricePerNight: 1200, extraGuestPrice: 0, priority: 100 }
+const whole = (name: string, weekdays: number[], price: number, extra: Partial<QuoteRate> = {}): QuoteRate => ({
+  name, weekdays, holidaysOnly: false, startDate: null, endDate: null, minGuests: 1, maxGuests: null,
+  includedGuests: 10, pricePerNight: price, extraGuestPrice: 65, bookableWithinDays: null, priority: 0, ...extra,
+})
+const small = (name: string, weekdays: number[], price: number, extra: Partial<QuoteRate> = {}): QuoteRate => ({
+  name, weekdays, holidaysOnly: false, startDate: null, endDate: null, minGuests: 1, maxGuests: 8,
+  includedGuests: 2, pricePerNight: price, extraGuestPrice: 65, bookableWithinDays: 14, priority: 0, ...extra,
+})
 
+const RATES: QuoteRate[] = [
+  whole('Будни', [1, 2, 3, 4], 890),
+  whole('Пятница', [5], 1050),
+  whole('Суббота', [6], 1350),
+  whole('Воскресенье', [0], 920),
+  whole('Праздники', [], 1350, { holidaysOnly: true, priority: 10 }),
+  small('Небольшая компания, пн–чт', [1, 2, 3, 4], 350),
+  small('Небольшая компания, пт и вс', [5, 0], 420),
+]
+
+const EXTRAS: QuoteExtra[] = [
+  { id: 'bath', name: 'Баня, сеанс 2 часа на двоих', priceType: 'per_item', price: 130, unitLabel: 'сеанс', maxQty: 3 },
+  { id: 'bathHour', name: 'Баня, дополнительный час', priceType: 'per_item', price: 50, unitLabel: 'ч', maxQty: 4 },
+  { id: 'broom', name: 'Веник', priceType: 'per_item', price: 15, unitLabel: 'шт.', maxQty: 6 },
+  { id: 'pet', name: 'Проживание с питомцем', priceType: 'per_stay', price: 30, unitLabel: null, maxQty: 1 },
+  { id: 'ride', name: 'Конная прогулка 30 минут', priceType: 'per_person', price: 50, unitLabel: 'чел.', maxQty: 1 },
+]
+
+// 2026-11-09 — понедельник, 2026-11-13 — пятница, 2026-11-14 — суббота
 const input = (over: Partial<QuoteInput> = {}): QuoteInput => ({
-  unit: { name: 'Дом у пруда', kind: 'house', capacity: 12, baseGuests: 8 },
-  rates: [base, weekend, newYear],
-  extras: [
-    { id: 'bath', name: 'Баня', priceType: 'per_stay', price: 150 },
-    { id: 'breakfast', name: 'Завтрак', priceType: 'per_person', price: 20 },
-    { id: 'tub', name: 'Чан', priceType: 'per_night', price: 120 },
-  ],
-  checkIn: '2026-11-04', // среда
-  checkOut: '2026-11-06',
-  guests: 8,
-  extraIds: [],
+  unit: { name: 'Дом КАНТРИ', capacity: 15, longStayFromNight: 3, longStayPercent: 10 },
+  rates: RATES,
+  extras: EXTRAS,
+  picks: [],
+  checkIn: '2026-11-09',
+  checkOut: '2026-11-10',
+  guests: 10,
+  holidays: ['2026-11-07', '2027-03-08'],
+  today: '2026-11-01',
   ...over,
 })
 
-describe('pickRate', () => {
-  it('берёт правило с наибольшим приоритетом', () => {
-    expect(pickRate([base, weekend], '2026-11-07')?.name).toBe('Выходные') // суббота
-    expect(pickRate([base, weekend], '2026-11-04')?.name).toBe('Будни')
+describe('тарифы по дням недели', () => {
+  it('будний день, 10 гостей — 890', () => {
+    expect(quote(input()).total).toBe(890)
   })
 
-  it('учитывает границы периода включительно', () => {
-    expect(pickRate([base, newYear], '2026-12-30')?.name).toBe('Новый год')
-    expect(pickRate([base, newYear], '2027-01-01')?.name).toBe('Новый год')
-    expect(pickRate([base, newYear], '2027-01-02')?.name).toBe('Будни')
+  it('пятница и суббота — по своим ценам', () => {
+    const q = quote(input({ checkIn: '2026-11-13', checkOut: '2026-11-15' }))
+    expect(q.nights.map((n) => [n.rate, n.total])).toEqual([['Пятница', 1050], ['Суббота', 1350]])
   })
 
-  it('возвращает null, если ничего не подходит', () => {
-    expect(pickRate([weekend], '2026-11-04')).toBeNull()
+  it('праздник в понедельник считается по праздничному тарифу', () => {
+    const q = quote(input({ checkIn: '2027-03-08', checkOut: '2027-03-09', today: '2027-01-10' }))
+    expect(q.nights[0]).toMatchObject({ rate: 'Праздники', holiday: true, total: 1350 })
   })
 })
 
-describe('quote', () => {
-  it('считает ночи по их собственным тарифам', () => {
-    const q = quote(input({ checkIn: '2026-11-05', checkOut: '2026-11-08' })) // ночи чт, пт, сб
-    expect(q.nights.map((n) => n.rate)).toEqual(['Будни', 'Выходные', 'Выходные'])
-    expect(q.lodging).toBe(300 + 450 + 450)
-    expect(q.ok).toBe(true)
+describe('гости', () => {
+  it('сверх 10 мест — по 65 за человека', () => {
+    expect(quote(input({ guests: 12 })).total).toBe(890 + 2 * 65)
   })
 
-  it('добавляет доплату за гостей сверх базового количества', () => {
-    const q = quote(input({ guests: 11 }))
-    expect(q.nights[0].extraGuests).toBe(3)
-    expect(q.lodging).toBe(2 * (300 + 3 * 40))
+  it('небольшая компания в будни платит меньше, чем за весь дом', () => {
+    const q = quote(input({ guests: 5 }))
+    expect(q.nights[0].rate).toBe('Небольшая компания, пн–чт')
+    expect(q.total).toBe(350 + 3 * 65)
   })
 
-  it('считает допуслуги по их типу цены', () => {
-    const q = quote(input({ guests: 10, extraIds: ['bath', 'breakfast', 'tub'] }))
+  it('9 гостей — уже весь дом', () => {
+    expect(quote(input({ guests: 9 })).nights[0].rate).toBe('Будни')
+  })
+
+  it('в субботу тарифа для небольшой компании нет', () => {
+    const q = quote(input({ guests: 2, checkIn: '2026-11-14', checkOut: '2026-11-15' }))
+    expect(q.nights[0]).toMatchObject({ rate: 'Суббота', total: 1350 })
+  })
+
+  it('больше вместимости — ошибка', () => {
+    const q = quote(input({ guests: 16 }))
+    expect(q.ok).toBe(false)
+    expect(q.errors[0]).toMatch(/до 15 гостей/)
+  })
+})
+
+describe('окно бронирования', () => {
+  it('раньше чем за 14 дней тариф для компании закрыт, гость видит пояснение', () => {
+    const q = quote(input({ guests: 2, today: '2026-10-01' }))
+    expect(q.nights[0].rate).toBe('Будни')
+    expect(q.notes[0]).toMatch(/открывается за 14 дн/)
+  })
+
+  it('за 14 дней и ближе — открыт', () => {
+    const q = quote(input({ guests: 2, today: '2026-10-26' }))
+    expect(q.nights[0].rate).toBe('Небольшая компания, пн–чт')
+    expect(q.notes).toEqual([])
+  })
+})
+
+describe('долгое проживание', () => {
+  it('с третьей ночи скидка 10%', () => {
+    const q = quote(input({ checkIn: '2026-11-09', checkOut: '2026-11-13' })) // пн–чт, 4 ночи
+    expect(q.nights.map((n) => n.discount)).toEqual([0, 0, 89, 89])
+    expect(q.total).toBe(890 * 4 - 178)
+    expect(q.discount).toBe(178)
+  })
+})
+
+describe('услуги', () => {
+  it('баня считается по сеансам и часам, прогулка — на каждого гостя', () => {
+    const q = quote(input({
+      guests: 4,
+      today: '2026-11-01',
+      picks: [{ id: 'bath', qty: 1 }, { id: 'bathHour', qty: 1 }, { id: 'broom', qty: 2 }, { id: 'pet', qty: 1 }, { id: 'ride', qty: 1 }],
+    }))
     const byId = Object.fromEntries(q.extras.map((l) => [l.id, l.total]))
-    expect(byId).toEqual({ bath: 150, breakfast: 10 * 20, tub: 2 * 120 })
-    expect(q.total).toBe(q.lodging + 150 + 200 + 240)
+    expect(byId).toEqual({ bath: 130, bathHour: 50, broom: 30, pet: 30, ride: 4 * 50 })
   })
 
-  it('не даёт превысить вместимость', () => {
-    const q = quote(input({ guests: 13 }))
-    expect(q.ok).toBe(false)
-    expect(q.errors[0]).toMatch(/до 12 гостей/)
+  it('не даёт заказать больше допустимого количества', () => {
+    const q = quote(input({ picks: [{ id: 'broom', qty: 50 }] }))
+    expect(q.extras[0].qty).toBe(6)
   })
+})
 
-  it('ругается на перепутанные даты', () => {
-    const q = quote(input({ checkIn: '2026-11-06', checkOut: '2026-11-06' }))
-    expect(q.ok).toBe(false)
-    expect(q.nights).toHaveLength(0)
-  })
-
-  it('сообщает о датах без цены, а не считает их бесплатными', () => {
-    const q = quote(input({ rates: [weekend] }))
-    expect(q.ok).toBe(false)
-    expect(q.lodging).toBe(0)
+describe('задаток', () => {
+  it('40% с округлением вверх', () => {
+    expect(depositFor(1365, 40)).toBe(546)
   })
 })

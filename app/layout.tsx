@@ -1,26 +1,25 @@
 import './globals.css'
-import type { Metadata, Viewport } from 'next'
-import { Golos_Text, Lora } from 'next/font/google'
+import type { Metadata } from 'next'
+import { Cormorant_Garamond, Manrope } from 'next/font/google'
 
-const golos = Golos_Text({ subsets: ['latin', 'cyrillic'], variable: '--font-golos', display: 'swap' })
-const lora = Lora({ subsets: ['latin', 'cyrillic'], variable: '--font-lora', style: ['normal', 'italic'], display: 'swap' })
+const manrope = Manrope({ subsets: ['latin', 'cyrillic'], variable: '--font-manrope', display: 'swap' })
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-cormorant',
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: { default: 'Гуртом — заявки для загородных площадок', template: '%s · Гуртом' },
-  description:
-    'Система заявок для усадеб и загородных комплексов: заявка с расчётом, карточка звонка для администратора, живое КП и «скинуться компанией».',
-}
-
-export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f3ee' },
-    { media: '(prefers-color-scheme: dark)', color: '#171715' },
-  ],
+  title: { default: 'Бронирование усадьбы', template: '%s' },
+  description: 'Календарь свободных дат, расчёт стоимости и заявка на бронь для загородных усадеб.',
+  robots: { index: false },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${golos.variable} ${lora.variable}`}>
+    <html lang="ru" className={`${manrope.variable} ${cormorant.variable}`}>
       <body className="min-h-dvh">{children}</body>
     </html>
   )

@@ -8,7 +8,7 @@ CREATE TYPE "PriceMode" AS ENUM ('exact', 'from', 'hidden');
 CREATE TYPE "UnitKind" AS ENUM ('house', 'room', 'venue', 'whole');
 
 -- CreateEnum
-CREATE TYPE "ExtraPriceType" AS ENUM ('per_stay', 'per_night', 'per_person', 'per_hour');
+CREATE TYPE "ExtraPriceType" AS ENUM ('per_stay', 'per_night', 'per_person', 'per_item');
 
 -- CreateEnum
 CREATE TYPE "LeadStatus" AS ENUM ('new', 'contacted', 'proposal', 'booked', 'done', 'lost');
@@ -30,18 +30,28 @@ CREATE TABLE "Property" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "kind" TEXT,
     "tagline" TEXT,
     "description" TEXT,
     "address" TEXT,
     "phone" TEXT,
+    "phone2" TEXT,
+    "email" TEXT,
+    "instagram" TEXT,
+    "heroPhoto" TEXT,
+    "theme" TEXT NOT NULL DEFAULT 'linen',
     "timezone" TEXT NOT NULL DEFAULT 'Europe/Minsk',
-    "showAvailability" BOOLEAN NOT NULL DEFAULT false,
-    "priceMode" "PriceMode" NOT NULL DEFAULT 'from',
-    "prepaymentPercent" INTEGER NOT NULL DEFAULT 30,
-    "callbackMinutes" INTEGER NOT NULL DEFAULT 60,
     "checkInTime" TEXT NOT NULL DEFAULT '15:00',
     "checkOutTime" TEXT NOT NULL DEFAULT '12:00',
+    "bookingTerms" TEXT,
+    "holidays" TEXT[],
+    "showAvailability" BOOLEAN NOT NULL DEFAULT true,
+    "priceMode" "PriceMode" NOT NULL DEFAULT 'exact',
+    "depositPercent" INTEGER NOT NULL DEFAULT 30,
+    "callbackMinutes" INTEGER NOT NULL DEFAULT 60,
+    "paymentDetails" TEXT,
     "telegramChatId" TEXT,
+    "proposalsEnabled" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Property_pkey" PRIMARY KEY ("id")
@@ -66,11 +76,14 @@ CREATE TABLE "Unit" (
     "propertyId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "kind" "UnitKind" NOT NULL,
+    "kind" "UnitKind" NOT NULL DEFAULT 'house',
+    "summary" TEXT,
     "description" TEXT,
     "capacity" INTEGER NOT NULL,
-    "baseGuests" INTEGER NOT NULL,
-    "photo" TEXT,
+    "photos" TEXT[],
+    "amenities" TEXT[],
+    "longStayFromNight" INTEGER,
+    "longStayPercent" INTEGER NOT NULL DEFAULT 0,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "icalToken" TEXT NOT NULL,
@@ -83,12 +96,18 @@ CREATE TABLE "Rate" (
     "id" TEXT NOT NULL,
     "unitId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "weekdays" INTEGER[],
+    "holidaysOnly" BOOLEAN NOT NULL DEFAULT false,
     "startDate" DATE,
     "endDate" DATE,
-    "weekdays" INTEGER[],
+    "minGuests" INTEGER NOT NULL DEFAULT 1,
+    "maxGuests" INTEGER,
+    "includedGuests" INTEGER NOT NULL,
     "pricePerNight" INTEGER NOT NULL,
     "extraGuestPrice" INTEGER NOT NULL DEFAULT 0,
+    "bookableWithinDays" INTEGER,
     "priority" INTEGER NOT NULL DEFAULT 0,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "Rate_pkey" PRIMARY KEY ("id")
 );
@@ -101,6 +120,9 @@ CREATE TABLE "Extra" (
     "description" TEXT,
     "priceType" "ExtraPriceType" NOT NULL,
     "price" INTEGER NOT NULL,
+    "unitLabel" TEXT,
+    "maxQty" INTEGER NOT NULL DEFAULT 1,
+    "group" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
 
@@ -118,13 +140,14 @@ CREATE TABLE "Lead" (
     "checkIn" DATE NOT NULL,
     "checkOut" DATE NOT NULL,
     "guests" INTEGER NOT NULL,
+    "children" INTEGER NOT NULL DEFAULT 0,
     "name" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "contactVia" "ContactVia" NOT NULL DEFAULT 'call',
     "comment" TEXT,
+    "extras" JSONB NOT NULL DEFAULT '[]',
     "quote" JSONB,
     "estimate" INTEGER,
-    "extraIds" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "contactedAt" TIMESTAMP(3),
 
@@ -273,7 +296,7 @@ ALTER TABLE "CalendarFeed" ADD CONSTRAINT "CalendarFeed_unitId_fkey" FOREIGN KEY
 
 -- Защита от двойной брони на уровне БД.
 -- Две заявки со статусом booked/done на один объект не могут пересекаться по датам,
--- даже если два администратора нажмут «Предоплата получена» одновременно.
+-- даже если два администратора нажмут «Подтвердить» одновременно.
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 ALTER TABLE "Lead" ADD CONSTRAINT "Lead_no_double_booking"

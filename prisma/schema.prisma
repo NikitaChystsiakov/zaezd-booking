@@ -7,27 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ───────────── Площадка и люди ─────────────
+// ───────────── Усадьба и люди ─────────────
 
 model Property {
   id                String     @id @default(cuid())
   slug              String     @unique
   name              String
+  /// Короткая подпись под названием: «Конная усадьба»
+  kind              String?
   tagline           String?
   description       String?
   address           String?
   phone             String?
+  phone2            String?
+  email             String?
+  instagram         String?
+  heroPhoto         String?
+  /// Оформление страницы бронирования: forest — тёмная хвоя (Буцевичи), linen — светлое
+  theme             String     @default("linen")
   timezone          String     @default("Europe/Minsk")
-  // Режимы контроля: что гость видит сам, а что узнаёт только от администратора
-  showAvailability  Boolean    @default(false)
-  priceMode         PriceMode  @default(from)
-  prepaymentPercent Int        @default(30)
-  callbackMinutes   Int        @default(60)
   checkInTime       String     @default("15:00")
   checkOutTime      String     @default("12:00")
-  telegramChatId    String?
-  /// Как перевести предоплату: карта, ЕРИП, счёт — показывается в КП
+  /// Условия бронирования, по одному пункту на строку
+  bookingTerms      String?
+  /// Праздничные даты 'YYYY-MM-DD' — для тарифов «в праздники»
+  holidays          String[]
+  // Что гость видит сам, а что узнаёт только от администратора
+  showAvailability  Boolean    @default(true)
+  priceMode         PriceMode  @default(exact)
+  depositPercent    Int        @default(30)
+  callbackMinutes   Int        @default(60)
   paymentDetails    String?
+  telegramChatId    String?
+  /// КП и «скинуться компанией» — выключены, пока не понадобятся
+  proposalsEnabled  Boolean    @default(false)
   createdAt         DateTime   @default(now())
   users             User[]
   units             Unit[]
@@ -50,41 +63,56 @@ model User {
 // ───────────── Что сдаётся и почём ─────────────
 
 model Unit {
-  id            String      @id @default(cuid())
-  propertyId    String
-  slug          String
-  name          String
-  kind          UnitKind
-  description   String?
-  capacity      Int
-  baseGuests    Int
-  photo         String?
-  sortOrder     Int         @default(0)
-  active        Boolean     @default(true)
-  // Секрет для iCal-ленты: Google Календарь, Куфар, Реалт подписываются на неё
-  icalToken     String      @unique @default(cuid())
-  property      Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  rates         Rate[]
-  leads         Lead[]
-  blocks        Block[]
-  calendarFeeds CalendarFeed[]
+  id                  String         @id @default(cuid())
+  propertyId          String
+  slug                String
+  name                String
+  kind                UnitKind       @default(house)
+  summary             String?
+  description         String?
+  /// Максимум гостей с ночлегом
+  capacity            Int
+  photos              String[]
+  amenities           String[]
+  /// Скидка за долгое проживание: начиная с ночи номер longStayFromNight
+  longStayFromNight   Int?
+  longStayPercent     Int            @default(0)
+  sortOrder           Int            @default(0)
+  active              Boolean        @default(true)
+  /// Секрет для iCal-ленты: Google Календарь, Куфар, Реалт подписываются на неё
+  icalToken           String         @unique @default(cuid())
+  property            Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rates               Rate[]
+  leads               Lead[]
+  blocks              Block[]
+  calendarFeeds       CalendarFeed[]
 
   @@unique([propertyId, slug])
 }
 
-/// Цена за ночь. Для каждой ночи выбирается подходящее правило с наибольшим priority.
+/// Тариф за ночь. Для каждой ночи берутся подходящие тарифы с наибольшим приоритетом,
+/// из них — самый выгодный для гостя.
 model Rate {
-  id              String    @id @default(cuid())
-  unitId          String
-  name            String
-  startDate       DateTime? @db.Date
-  endDate         DateTime? @db.Date
+  id                String    @id @default(cuid())
+  unitId            String
+  name              String
   /// 0 = воскресенье … 6 = суббота; пустой массив = любой день
-  weekdays        Int[]
-  pricePerNight   Int
-  extraGuestPrice Int       @default(0)
-  priority        Int       @default(0)
-  unit            Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  weekdays          Int[]
+  /// Только в праздничные даты усадьбы
+  holidaysOnly      Boolean   @default(false)
+  startDate         DateTime? @db.Date
+  endDate           DateTime? @db.Date
+  minGuests         Int       @default(1)
+  maxGuests         Int?
+  /// Сколько гостей входит в цену; за остальных — extraGuestPrice
+  includedGuests    Int
+  pricePerNight     Int
+  extraGuestPrice   Int       @default(0)
+  /// Тариф доступен, только если до заезда не больше N дней (например, «малые компании — за 2 недели»)
+  bookableWithinDays Int?
+  priority          Int       @default(0)
+  sortOrder         Int       @default(0)
+  unit              Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
 }
 
 model Extra {
@@ -94,12 +122,17 @@ model Extra {
   description String?
   priceType   ExtraPriceType
   price       Int
+  /// Подпись к количеству: «сеанс», «час», «чел.»
+  unitLabel   String?
+  /// 1 — галочка, больше — счётчик
+  maxQty      Int            @default(1)
+  group       String?
   active      Boolean        @default(true)
   sortOrder   Int            @default(0)
   property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
-// ───────────── Заявка → звонок → КП → предоплата ─────────────
+// ───────────── Заявки ─────────────
 
 model Lead {
   id            String       @id @default(cuid())
@@ -111,14 +144,16 @@ model Lead {
   checkIn       DateTime     @db.Date
   checkOut      DateTime     @db.Date
   guests        Int
+  children      Int          @default(0)
   name          String
   phone         String
   contactVia    ContactVia   @default(call)
   comment       String?
-  /// Расчёт на момент заявки: { total, nights[], extras[] }
+  /// Выбранные услуги: [{ id, qty }]
+  extras        Json         @default("[]")
+  /// Расчёт на момент заявки
   quote         Json?
   estimate      Int?
-  extraIds      String[]
   createdAt     DateTime     @default(now())
   contactedAt   DateTime?
   property      Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -143,12 +178,11 @@ model LeadEvent {
   @@index([leadId, createdAt])
 }
 
-/// Живое коммерческое предложение по ссылке
+/// Живое коммерческое предложение (выключено флагом proposalsEnabled)
 model Proposal {
   id                String         @id @default(cuid())
   leadId            String         @unique
   token             String         @unique @default(cuid())
-  /// [{ id, title, note, price, extraIds }]
   options           Json
   chosenOptionId    String?
   message           String?
@@ -162,7 +196,6 @@ model Proposal {
   contributions     Contribution[]
 }
 
-/// «Скинуться компанией»: каждый участник отмечает свою долю, администратор подтверждает
 model Contribution {
   id          String             @id @default(cuid())
   proposalId  String
@@ -191,7 +224,6 @@ model Block {
   @@index([unitId, start])
 }
 
-/// Внешний календарь, из которого подтягиваем занятость (Google, Куфар, Реалт…)
 model CalendarFeed {
   id         String    @id @default(cuid())
   unitId     String
@@ -226,7 +258,7 @@ enum ExtraPriceType {
   per_stay
   per_night
   per_person
-  per_hour
+  per_item
 }
 
 enum LeadStatus {
