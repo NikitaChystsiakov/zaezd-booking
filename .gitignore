@@ -54,3 +54,6 @@ __pycache__/
 
 # загруженные фото
 /uploads/
+
+# локальные настройки Claude Code
+.claude/
