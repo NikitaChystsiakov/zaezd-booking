@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
-import { requireSession } from '@/lib/session'
+import { requirePermission } from '@/lib/session'
 import { appUrl } from '@/lib/notify'
 import { ago } from '@/lib/domain'
 import { PageHeader, Section } from '@/components/admin/ui'
@@ -11,7 +11,7 @@ import { CopyButton } from '@/components/CopyButton'
 export const metadata: Metadata = { title: 'Настройки' }
 
 export default async function SettingsPage() {
-  const session = await requireSession()
+  const session = await requirePermission('settings:write')
   const property = await prisma.property.findUniqueOrThrow({
     where: { id: session.propertyId },
     include: { units: { orderBy: { sortOrder: 'asc' }, include: { calendarFeeds: true } } },

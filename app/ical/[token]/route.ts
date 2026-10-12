@@ -18,8 +18,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ token: str
   if (!unit) return new Response('Not found', { status: 404 })
 
   const body = buildIcal(unit.name, [
-    ...unit.leads.map((l) => ({ uid: `lead-${l.id}@gurtom`, start: toISO(l.checkIn), end: toISO(l.checkOut), summary: 'Занято' })),
-    ...unit.blocks.map((b) => ({ uid: `block-${b.id}@gurtom`, start: toISO(b.start), end: toISO(b.end), summary: 'Закрыто' })),
+    ...unit.leads.map((l) => ({ uid: `lead-${l.id}@zaezd`, start: toISO(l.checkIn), end: toISO(l.checkOut), summary: 'Занято' })),
+    ...unit.blocks.map((b) => ({ uid: `block-${b.id}@zaezd`, start: toISO(b.start), end: toISO(b.end), summary: 'Закрыто' })),
   ])
 
   return new Response(body, {

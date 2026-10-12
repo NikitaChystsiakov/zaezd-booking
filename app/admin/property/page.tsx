@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/session'
-import { PageHeader } from '@/components/admin/ui'
+import { can } from '@/lib/permissions'
+import { PageHeader, ReadOnlyGate } from '@/components/admin/ui'
 import { PropertyForm } from '@/components/admin/PropertyForm'
 
 export const metadata: Metadata = { title: 'Тексты и фото' }
@@ -13,6 +14,7 @@ export default async function PropertyPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <PageHeader title="Тексты и фото" sub="Что гость видит на странице бронирования: первый экран, контакты, условия. Тексты домов — в «Дома и тарифы»." />
+      <ReadOnlyGate readOnly={!can(session.role, 'units:write')}>
       <PropertyForm
         slug={p.slug}
         heroPhoto={p.heroPhoto}
@@ -32,6 +34,7 @@ export default async function PropertyPage() {
           holidays: p.holidays,
         }}
       />
+      </ReadOnlyGate>
     </div>
   )
 }

@@ -13,7 +13,7 @@ export function buildIcal(calName: string, events: IcalEvent[]): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Gurtom//Booking//RU',
+    'PRODID:-//Zaezd//Booking//RU',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escape(calName)}`,

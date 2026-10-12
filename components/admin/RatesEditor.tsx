@@ -26,7 +26,7 @@ function guestsLabel(r: RateInput): string {
   return `${r.minGuests}–${r.maxGuests} гостей`
 }
 
-export function RatesEditor({ unitId, capacity, rates }: { unitId: string; capacity: number; rates: RateRow[] }) {
+export function RatesEditor({ unitId, capacity, rates, canDelete }: { unitId: string; capacity: number; rates: RateRow[]; canDelete: boolean }) {
   const [editing, setEditing] = useState<string | 'new' | null>(null)
   const blank: RateInput = {
     name: '', weekdays: [], holidaysOnly: false, startDate: null, endDate: null, minGuests: 1, maxGuests: null,
@@ -56,13 +56,13 @@ export function RatesEditor({ unitId, capacity, rates }: { unitId: string; capac
         <ul className="divide-y divide-line">
           {editing === 'new' && (
             <li className="bg-surface-2/50 p-5">
-              <RateForm unitId={unitId} rateId={null} initial={blank} capacity={capacity} onDone={() => setEditing(null)} />
+              <RateForm unitId={unitId} rateId={null} initial={blank} capacity={capacity} canDelete={canDelete} onDone={() => setEditing(null)} />
             </li>
           )}
           {rates.map((r) =>
             editing === r.id ? (
               <li key={r.id} className="bg-surface-2/50 p-5">
-                <RateForm unitId={unitId} rateId={r.id} initial={r} capacity={capacity} onDone={() => setEditing(null)} />
+                <RateForm unitId={unitId} rateId={r.id} initial={r} capacity={capacity} canDelete={canDelete} onDone={() => setEditing(null)} />
               </li>
             ) : (
               <li key={r.id} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-5 py-3.5 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_40px]">
@@ -97,7 +97,7 @@ export function RatesEditor({ unitId, capacity, rates }: { unitId: string; capac
   )
 }
 
-function RateForm({ unitId, rateId, initial, capacity, onDone }: { unitId: string; rateId: string | null; initial: RateInput; capacity: number; onDone: () => void }) {
+function RateForm({ unitId, rateId, initial, capacity, canDelete, onDone }: { unitId: string; rateId: string | null; initial: RateInput; capacity: number; canDelete: boolean; onDone: () => void }) {
   const [r, setR] = useState<RateInput>(initial)
   const [period, setPeriod] = useState(!!(initial.startDate || initial.endDate))
   const [error, setError] = useState<string | null>(null)
@@ -202,7 +202,7 @@ function RateForm({ unitId, rateId, initial, capacity, onDone }: { unitId: strin
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn-primary" disabled={pending}>{pending ? 'Сохраняем…' : 'Сохранить тариф'}</button>
         <button type="button" className="btn-quiet" onClick={onDone}>Отмена</button>
-        {rateId && (
+        {rateId && canDelete && (
           <button
             type="button"
             className="btn-quiet ml-auto text-alert"

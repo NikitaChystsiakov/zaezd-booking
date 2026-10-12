@@ -7,6 +7,7 @@ import { toDate, formatRange, todayISO } from '@/lib/dates'
 import { findConflicts } from '@/lib/availability'
 import { toQuoteExtras, toQuoteRates, toQuoteUnit, CONTACT_VIA } from '@/lib/domain'
 import { appUrl, escapeHtml, notifyTelegram } from '@/lib/notify'
+import { clientIp, rateLimit } from '@/lib/rateLimit'
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
@@ -38,6 +39,8 @@ export async function createLead(slug: string, input: LeadInput): Promise<LeadRe
   const parsed = leadSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Проверьте форму' }
   const data = parsed.data
+  // Не больше 10 заявок за 10 минут с одного адреса: защита от потока заявок и спама в Telegram владельцу
+  if (!rateLimit(`lead:ip:${await clientIp()}`, 10, 10 * 60_000)) return { ok: false, error: 'Слишком много заявок подряд. Попробуйте позже или позвоните нам' }
   if (data.checkIn >= data.checkOut) return { ok: false, error: 'Выберите даты заезда и выезда' }
 
   const property = await prisma.property.findUnique({

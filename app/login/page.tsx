@@ -39,9 +39,13 @@ export default function LoginPage() {
           <div className="mt-6 rounded-2xl border border-line bg-surface p-4 text-sm">
             <div className="font-semibold">Тестовый доступ</div>
             <div className="mt-1 text-ink-2">
-              Почта <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">demo@zaezd.by</code>, пароль{' '}
-              <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">demo</code>
+              Пароль у всех <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">demo</code>. Почта зависит от роли:
             </div>
+            <ul className="mt-2 space-y-1 text-ink-2">
+              <li><code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">demo@zaezd.by</code> — владелец, всё</li>
+              <li><code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">manager@zaezd.by</code> — управляющий, без настроек и команды</li>
+              <li><code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">staff@zaezd.by</code> — администратор, заявки и календарь</li>
+            </ul>
           </div>
         </div>
       </div>

@@ -4,12 +4,14 @@ import type { Metadata } from 'next'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/session'
+import { can } from '@/lib/permissions'
 import { todayISO, toISO } from '@/lib/dates'
 import { toQuoteExtras } from '@/lib/domain'
 import { UnitForm } from '@/components/admin/UnitForm'
 import { PhotoManager } from '@/components/admin/PhotoManager'
 import { RatesEditor, type RateRow } from '@/components/admin/RatesEditor'
 import { PriceCheck } from '@/components/admin/PriceCheck'
+import { ReadOnlyGate } from '@/components/admin/ui'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -57,10 +59,12 @@ export default async function UnitPage({ params }: { params: Promise<{ id: strin
         </a>
       </div>
 
+      <ReadOnlyGate readOnly={!can(session.role, 'units:write')}>
       <div className="space-y-6">
         <PhotoManager unitId={unit.id} photos={unit.photos} />
         <UnitForm
           unitId={unit.id}
+          canDelete={can(session.role, 'units:delete')}
           initial={{
             name: unit.name,
             summary: unit.summary ?? '',
@@ -72,7 +76,11 @@ export default async function UnitPage({ params }: { params: Promise<{ id: strin
             active: unit.active,
           }}
         />
-        <RatesEditor unitId={unit.id} capacity={unit.capacity} rates={rates} />
+        <RatesEditor unitId={unit.id} capacity={unit.capacity} rates={rates} canDelete={can(session.role, 'units:delete')} />
+      </div>
+      </ReadOnlyGate>
+
+      <div className="mt-6">
         <PriceCheck
           unit={{ name: unit.name, capacity: unit.capacity, longStayFromNight: unit.longStayFromNight, longStayPercent: unit.longStayPercent }}
           rates={rates}

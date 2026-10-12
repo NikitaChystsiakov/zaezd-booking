@@ -3,8 +3,8 @@ import { buildIcal, parseIcal } from './ical'
 
 describe('ical', () => {
   it('разбирает то, что сам же собрал', () => {
-    const text = buildIcal('Дом', [{ uid: 'a@gurtom', start: '2026-11-06', end: '2026-11-08', summary: 'Бронь, 8 гостей' }])
-    expect(parseIcal(text)).toEqual([{ uid: 'a@gurtom', start: '2026-11-06', end: '2026-11-08', summary: 'Бронь, 8 гостей' }])
+    const text = buildIcal('Дом', [{ uid: 'a@zaezd', start: '2026-11-06', end: '2026-11-08', summary: 'Бронь, 8 гостей' }])
+    expect(parseIcal(text)).toEqual([{ uid: 'a@zaezd', start: '2026-11-06', end: '2026-11-08', summary: 'Бронь, 8 гостей' }])
   })
 
   it('понимает даты со временем, перенос строк и событие без DTEND', () => {

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ArrowRight, ImageOff } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/session'
+import { can } from '@/lib/permissions'
 import { formatMoney } from '@/lib/quote'
 import { plural } from '@/lib/dates'
 import { PageHeader } from '@/components/admin/ui'
@@ -53,7 +54,7 @@ export default async function UnitsPage() {
             </Link>
           )
         })}
-        <NewUnitForm />
+        {can(session.role, 'units:write') && <NewUnitForm />}
       </div>
     </div>
   )

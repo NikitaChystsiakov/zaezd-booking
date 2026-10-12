@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/session'
 import { logout } from '@/app/login/actions'
 import { AdminNav } from '@/components/admin/AdminNav'
+import { ROLE_LABEL } from '@/lib/permissions'
 
 export const metadata: Metadata = { title: { default: 'Панель управления', template: '%s · Панель управления' } }
 
@@ -27,10 +28,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Сайт бронирования <ArrowUpRight size={13} />
           </a>
         </div>
-        <AdminNav newCount={newCount} />
+        <AdminNav newCount={newCount} role={session.role} />
         <div className="hidden border-t border-side-line px-6 py-5 lg:mt-auto lg:block">
           <div className="text-sm font-semibold">{user.name}</div>
           <div className="truncate text-xs text-side-ink-2">{user.email}</div>
+          <div className="mt-0.5 text-xs text-side-ink-2">{ROLE_LABEL[session.role]}</div>
           <form action={logout} className="mt-3">
             <button className="inline-flex items-center gap-1.5 text-[13px] text-side-ink-2 hover:text-side-ink">
               <LogOut size={14} /> Выйти

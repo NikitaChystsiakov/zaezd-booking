@@ -2,7 +2,8 @@ import { rm } from 'node:fs/promises'
 import { prisma } from '@/lib/prisma'
 import { signJwt, getCookieName } from '@/lib/jwt'
 import { addDays, todayISO, toDate } from '@/lib/dates'
-import { cookieJar } from './setup'
+import { resetRateLimit } from '@/lib/rateLimit'
+import { cookieJar, headerJar } from './setup'
 
 export const today = todayISO()
 export const day = (n: number) => addDays(today, n)
@@ -14,6 +15,8 @@ export async function resetDb() {
   )
   await rm(process.env.UPLOAD_DIR!, { recursive: true, force: true })
   cookieJar.clear()
+  headerJar.clear()
+  resetRateLimit()
 }
 
 /**
@@ -55,6 +58,11 @@ export async function makeProperty(slug: string, opts: { showAvailability?: bool
     data: { propertyId: property.id, name: 'Баня', priceType: 'per_item', price: 100, unitLabel: 'сеанс', maxQty: 2 },
   })
   return { property, user, unit, bath }
+}
+
+/** Ещё один пользователь той же усадьбы с нужной ролью */
+export async function makeUser(propertyId: string, role: 'owner' | 'admin' | 'staff', email = `${role}-${Math.random().toString(36).slice(2, 7)}@test.by`) {
+  return prisma.user.create({ data: { propertyId, email, name: `Сотрудник ${role}`, passwordHash: 'x', role } })
 }
 
 export async function loginAs(user: { id: string; propertyId: string; role: 'owner' | 'admin' | 'staff' }) {

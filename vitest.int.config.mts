@@ -8,9 +8,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   resolve: {
     alias: {
-      '@': path.resolve(__dirname),
+      '@': path.resolve(import.meta.dirname),
       // Вне React Server Components этот пакет бросает исключение — в тестах он не нужен
-      'server-only': path.resolve(__dirname, 'node_modules/server-only/empty.js'),
+      'server-only': path.resolve(import.meta.dirname, 'node_modules/server-only/empty.js'),
     },
   },
   test: {

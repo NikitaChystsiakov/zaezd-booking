@@ -8,12 +8,14 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import type { LeadStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { requireSession } from '@/lib/session'
+import { requirePermission } from '@/lib/session'
+import type { Permission } from '@/lib/permissions'
 import { isDoubleBookingError } from '@/lib/availability'
 import { parseIcal } from '@/lib/ical'
 import { toDate } from '@/lib/dates'
 import { STATUS } from '@/lib/domain'
 import { UPLOAD_DIR } from '@/lib/uploads'
+import { fetchPublicText } from '@/lib/safeFetch'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -24,15 +26,15 @@ function refresh() {
 }
 
 /** Запись именно этой усадьбы — иначе на список. Защита от чужих id в запросе. */
-async function ownLead(leadId: string) {
-  const session = await requireSession()
+async function ownLead(leadId: string, permission: Permission = 'leads:write') {
+  const session = await requirePermission(permission)
   const lead = await prisma.lead.findFirst({ where: { id: leadId, propertyId: session.propertyId } })
   if (!lead) redirect('/admin')
   return { session, lead }
 }
 
-async function ownUnit(unitId: string) {
-  const session = await requireSession()
+async function ownUnit(unitId: string, permission: Permission = 'units:write') {
+  const session = await requirePermission(permission)
   const unit = await prisma.unit.findFirst({ where: { id: unitId, propertyId: session.propertyId } })
   if (!unit) redirect('/admin/units')
   return { session, unit }
@@ -122,7 +124,7 @@ function slugify(name: string): string {
 }
 
 export async function createUnit(name: string, capacity: number): Promise<{ ok: false; error: string } | never> {
-  const session = await requireSession()
+  const session = await requirePermission('units:write')
   const parsed = unitSchema.pick({ name: true, capacity: true }).safeParse({ name, capacity })
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message }
   const count = await prisma.unit.count({ where: { propertyId: session.propertyId } })
@@ -154,7 +156,7 @@ export async function saveUnit(unitId: string, input: UnitInput): Promise<Action
 }
 
 export async function deleteUnit(unitId: string): Promise<ActionResult> {
-  const { unit } = await ownUnit(unitId)
+  const { unit } = await ownUnit(unitId, 'units:delete')
   const bookings = await prisma.lead.count({ where: { unitId: unit.id, status: { in: ['booked', 'new', 'contacted'] } } })
   if (bookings) return { ok: false, error: 'По дому есть заявки и брони — сначала закройте их или просто скройте дом с сайта' }
   await prisma.unit.delete({ where: { id: unit.id } })
@@ -207,7 +209,7 @@ export async function saveRate(unitId: string, rateId: string | null, input: Rat
 }
 
 export async function deleteRate(unitId: string, rateId: string): Promise<ActionResult> {
-  const { unit } = await ownUnit(unitId)
+  const { unit } = await ownUnit(unitId, 'units:delete')
   const total = await prisma.rate.count({ where: { unitId: unit.id } })
   if (total <= 1) return { ok: false, error: 'У дома должен остаться хотя бы один тариф' }
   await prisma.rate.deleteMany({ where: { id: rateId, unitId: unit.id } })
@@ -234,7 +236,7 @@ async function removeUpload(url: string) {
   // Удаляем только свои загрузки; стартовые фото из /public не трогаем
   if (!url.startsWith('/media/')) return
   const file = path.join(/* turbopackIgnore: true */ UPLOAD_DIR, url.slice('/media/'.length))
-  if (!file.startsWith(UPLOAD_DIR)) return
+  if (!file.startsWith(UPLOAD_DIR + path.sep)) return
   await unlink(file).catch(() => {})
 }
 
@@ -280,7 +282,7 @@ const extraSchema = z.object({
 export type ExtraInput = z.infer<typeof extraSchema>
 
 export async function saveExtra(extraId: string | null, input: ExtraInput): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('units:write')
   const parsed = extraSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message }
   const data = {
@@ -303,7 +305,7 @@ export async function saveExtra(extraId: string | null, input: ExtraInput): Prom
 }
 
 export async function deleteExtra(extraId: string): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('units:delete')
   await prisma.extra.deleteMany({ where: { id: extraId, propertyId: session.propertyId } })
   refresh()
   return { ok: true }
@@ -330,7 +332,7 @@ const propertySchema = z.object({
 export type PropertyInput = z.infer<typeof propertySchema>
 
 export async function saveProperty(input: PropertyInput): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('units:write')
   const parsed = propertySchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message }
   const d = parsed.data
@@ -356,7 +358,7 @@ export async function saveProperty(input: PropertyInput): Promise<ActionResult> 
 }
 
 export async function uploadHeroPhoto(form: FormData): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('units:write')
   const file = form.get('photo')
   if (!(file instanceof File) || !file.size) return { ok: false, error: 'Выберите фото' }
   try {
@@ -383,7 +385,7 @@ const settingsSchema = z.object({
 })
 
 export async function saveSettings(input: z.infer<typeof settingsSchema>): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('settings:write')
   const parsed = settingsSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: 'Проверьте значения' }
   await prisma.property.update({
@@ -397,7 +399,7 @@ export async function saveSettings(input: z.infer<typeof settingsSchema>): Promi
 // ───────── Календарь: закрытые даты и внешние ленты ─────────
 
 export async function addBlock(unitId: string, start: string, end: string, reason: string): Promise<ActionResult> {
-  const { unit } = await ownUnit(unitId)
+  const { unit } = await ownUnit(unitId, 'calendar:write')
   if (!isoDate.safeParse(start).success || !isoDate.safeParse(end).success || start >= end) return { ok: false, error: 'Проверьте даты' }
   await prisma.block.create({ data: { unitId: unit.id, start: toDate(start), end: toDate(end), reason: reason.trim().slice(0, 120) || 'Закрыто' } })
   refresh()
@@ -405,7 +407,7 @@ export async function addBlock(unitId: string, start: string, end: string, reaso
 }
 
 export async function deleteBlock(blockId: string): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('calendar:write')
   const block = await prisma.block.findFirst({ where: { id: blockId, unit: { propertyId: session.propertyId }, feedId: null } })
   if (!block) return { ok: false, error: 'Занятость из внешних календарей снимается там, откуда пришла' }
   await prisma.block.delete({ where: { id: block.id } })
@@ -414,14 +416,14 @@ export async function deleteBlock(blockId: string): Promise<ActionResult> {
 }
 
 export async function addFeed(unitId: string, label: string, url: string): Promise<ActionResult> {
-  const { unit } = await ownUnit(unitId)
+  const { unit } = await ownUnit(unitId, 'settings:write')
   if (!z.url({ protocol: /^https?$/ }).safeParse(url.trim()).success) return { ok: false, error: 'Нужна ссылка вида https://…' }
   const feed = await prisma.calendarFeed.create({ data: { unitId: unit.id, label: label.trim().slice(0, 40) || 'Календарь', url: url.trim() } })
   return syncFeed(feed.id)
 }
 
 export async function removeFeed(feedId: string): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('settings:write')
   await prisma.calendarFeed.deleteMany({ where: { id: feedId, unit: { propertyId: session.propertyId } } })
   refresh()
   return { ok: true }
@@ -429,18 +431,14 @@ export async function removeFeed(feedId: string): Promise<ActionResult> {
 
 /** Подтянуть занятость из внешней ленты: старые записи этой ленты заменяются новыми */
 export async function syncFeed(feedId: string): Promise<ActionResult> {
-  const session = await requireSession()
+  const session = await requirePermission('settings:write')
   const feed = await prisma.calendarFeed.findFirst({ where: { id: feedId, unit: { propertyId: session.propertyId } } })
   if (!feed) return { ok: false, error: 'Не найдено' }
 
   let text: string
   try {
-    // Не даём через ленту достучаться до внутренних адресов сервера
-    const host = new URL(feed.url).hostname
-    if (/^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|0\.)/.test(host)) throw new Error('внутренние адреса запрещены')
-    const res = await fetch(feed.url, { signal: AbortSignal.timeout(8000), headers: { accept: 'text/calendar' } })
-    if (!res.ok) throw new Error(`сервер ответил ${res.status}`)
-    text = await res.text()
+    // Только публичные адреса, редиректы проверяются шаг за шагом (lib/safeFetch.ts)
+    text = await fetchPublicText(feed.url, { accept: 'text/calendar' })
     if (!text.includes('BEGIN:VCALENDAR')) throw new Error('по ссылке не календарь')
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'ошибка'

@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { deleteUnit, saveUnit, type UnitInput } from '@/app/admin/actions'
 import { Section, SaveBar } from './ui'
 
-export function UnitForm({ unitId, initial }: { unitId: string; initial: UnitInput }) {
+export function UnitForm({ unitId, initial, canDelete }: { unitId: string; initial: UnitInput; canDelete: boolean }) {
   const [u, setU] = useState(initial)
   const [tag, setTag] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -100,20 +100,22 @@ export function UnitForm({ unitId, initial }: { unitId: string; initial: UnitInp
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
           <SaveBar pending={pending} msg={msg} />
-          <button
-            type="button"
-            className="btn-quiet btn-sm text-alert"
-            disabled={pending}
-            onClick={() => {
-              if (!confirm(`Удалить «${u.name}» вместе с тарифами? Это нельзя отменить.`)) return
-              run(async () => {
-                const res = await deleteUnit(unitId)
-                if (res && !res.ok) setMsg({ ok: false, text: res.error })
-              })
-            }}
-          >
-            Удалить дом
-          </button>
+          {canDelete && (
+            <button
+              type="button"
+              className="btn-quiet btn-sm text-alert"
+              disabled={pending}
+              onClick={() => {
+                if (!confirm(`Удалить «${u.name}» вместе с тарифами? Это нельзя отменить.`)) return
+                run(async () => {
+                  const res = await deleteUnit(unitId)
+                  if (res && !res.ok) setMsg({ ok: false, text: res.error })
+                })
+              }}
+            >
+              Удалить дом
+            </button>
+          )}
         </div>
       </Section>
     </form>

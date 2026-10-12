@@ -4,8 +4,11 @@
 import { vi } from 'vitest'
 
 export const cookieJar = new Map<string, string>()
+// Заголовки текущего запроса (для адреса клиента)
+export const headerJar = new Map<string, string>()
 
 vi.mock('next/headers', () => ({
+  headers: async () => new Headers(Object.fromEntries(headerJar)),
   cookies: async () => ({
     get: (name: string) => (cookieJar.has(name) ? { name, value: cookieJar.get(name)! } : undefined),
     set: (name: string, value: string) => void cookieJar.set(name, value),
@@ -32,3 +35,9 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
 
 // cache() из React кэширует только внутри серверного рендера; в тестах — без кэша
 vi.mock('react', async (orig) => ({ ...(await orig<typeof import('react')>()), cache: <T,>(fn: T) => fn }))
+
+// Имена ссылок в тестах вымышленные (kufar.example): отдаём им публичный адрес, а localhost и IP остаются как есть.
+// Сами запросы подменены в тестах через fetch.
+vi.mock('node:dns/promises', () => ({
+  lookup: async (host: string) => [{ address: host === 'localhost' ? '127.0.0.1' : '93.184.216.34', family: 4 }],
+}))

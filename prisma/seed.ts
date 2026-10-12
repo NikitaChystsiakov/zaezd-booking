@@ -92,10 +92,18 @@ async function main() {
       id: 'demo-admin',
       propertyId: property.id,
       email: 'demo@zaezd.by',
-      name: 'Администратор',
+      name: 'Владелец',
       role: 'owner',
       passwordHash: await bcrypt.hash('demo', 10),
     },
+  })
+  // Остальные роли, чтобы показать разницу прав: управляющий и администратор
+  const demoHash = await bcrypt.hash('demo', 10)
+  await prisma.user.createMany({
+    data: [
+      { id: 'demo-manager', propertyId: property.id, email: 'manager@zaezd.by', name: 'Управляющий', role: 'admin', passwordHash: demoHash },
+      { id: 'demo-staff', propertyId: property.id, email: 'staff@zaezd.by', name: 'Дежурный', role: 'staff', passwordHash: demoHash },
+    ],
   })
 
   const unitsData = [

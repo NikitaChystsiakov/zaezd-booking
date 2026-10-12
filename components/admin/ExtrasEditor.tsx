@@ -14,7 +14,7 @@ const TYPES: { v: ExtraInput['priceType']; label: string; note: string }[] = [
   { v: 'per_person', label: 'За каждого гостя', note: 'считается по числу гостей в брони' },
 ]
 
-export function ExtrasEditor({ extras }: { extras: Row[] }) {
+export function ExtrasEditor({ extras, canDelete }: { extras: Row[]; canDelete: boolean }) {
   const [editing, setEditing] = useState<string | 'new' | null>(null)
   const groups = [...new Set(extras.map((e) => e.group || 'Без группы'))]
   const blank: ExtraInput = { name: '', description: '', group: groups[0] === 'Без группы' ? '' : (groups[0] ?? ''), priceType: 'per_item', price: 0, unitLabel: 'шт.', maxQty: 10, active: true }
@@ -30,7 +30,7 @@ export function ExtrasEditor({ extras }: { extras: Row[] }) {
       </div>
       {editing === 'new' && (
         <div className="card p-6">
-          <ExtraForm extraId={null} initial={blank} groups={groups} onDone={() => setEditing(null)} />
+          <ExtraForm extraId={null} initial={blank} groups={groups} canDelete={canDelete} onDone={() => setEditing(null)} />
         </div>
       )}
       {groups.map((g) => (
@@ -42,7 +42,7 @@ export function ExtrasEditor({ extras }: { extras: Row[] }) {
               .map((e) =>
                 editing === e.id ? (
                   <li key={e.id} className="bg-surface-2/50 p-6">
-                    <ExtraForm extraId={e.id} initial={e} groups={groups} onDone={() => setEditing(null)} />
+                    <ExtraForm extraId={e.id} initial={e} groups={groups} canDelete={canDelete} onDone={() => setEditing(null)} />
                   </li>
                 ) : (
                   <li key={e.id} className={`flex items-center gap-4 px-5 py-4 ${e.active ? '' : 'opacity-55'}`}>
@@ -69,7 +69,7 @@ export function ExtrasEditor({ extras }: { extras: Row[] }) {
   )
 }
 
-function ExtraForm({ extraId, initial, groups, onDone }: { extraId: string | null; initial: ExtraInput; groups: string[]; onDone: () => void }) {
+function ExtraForm({ extraId, initial, groups, canDelete, onDone }: { extraId: string | null; initial: ExtraInput; groups: string[]; canDelete: boolean; onDone: () => void }) {
   const [e, setE] = useState(initial)
   const [error, setError] = useState<string | null>(null)
   const [pending, run] = useTransition()
@@ -145,7 +145,7 @@ function ExtraForm({ extraId, initial, groups, onDone }: { extraId: string | nul
       <div className="flex flex-wrap gap-2">
         <button className="btn-primary" disabled={pending}>{pending ? 'Сохраняем…' : 'Сохранить'}</button>
         <button type="button" className="btn-quiet" onClick={onDone}>Отмена</button>
-        {extraId && (
+        {extraId && canDelete && (
           <button
             type="button"
             className="btn-quiet ml-auto text-alert"

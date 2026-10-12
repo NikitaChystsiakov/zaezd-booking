@@ -2,22 +2,25 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BedDouble, CalendarDays, Inbox, Settings, Sparkles, SquarePen } from 'lucide-react'
+import { BedDouble, CalendarDays, Inbox, Settings, Sparkles, SquarePen, Users } from 'lucide-react'
+import type { Role } from '@prisma/client'
+import { can, type Permission } from '@/lib/permissions'
 
-const ITEMS = [
+const ITEMS: { href: string; label: string; icon: typeof Inbox; match?: (p: string) => boolean; needs?: Permission }[] = [
   { href: '/admin', label: 'Заявки', icon: Inbox, match: (p: string) => p === '/admin' || p.startsWith('/admin/leads') },
   { href: '/admin/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/admin/units', label: 'Дома и тарифы', icon: BedDouble },
   { href: '/admin/extras', label: 'Услуги', icon: Sparkles },
   { href: '/admin/property', label: 'Тексты и фото', icon: SquarePen },
-  { href: '/admin/settings', label: 'Настройки', icon: Settings },
+  { href: '/admin/team', label: 'Команда', icon: Users, needs: 'team:manage' },
+  { href: '/admin/settings', label: 'Настройки', icon: Settings, needs: 'settings:write' },
 ]
 
-export function AdminNav({ newCount }: { newCount: number }) {
+export function AdminNav({ newCount, role }: { newCount: number; role: Role }) {
   const pathname = usePathname()
   return (
     <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:px-4 lg:pb-0">
-      {ITEMS.map(({ href, label, icon: Icon, match }) => {
+      {ITEMS.filter((i) => !i.needs || can(role, i.needs)).map(({ href, label, icon: Icon, match }) => {
         const active = match ? match(pathname) : pathname.startsWith(href)
         return (
           <Link

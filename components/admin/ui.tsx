@@ -41,3 +41,21 @@ export function SaveBar({ pending, msg, label = 'Сохранить' }: { pendin
     </div>
   )
 }
+
+/**
+ * Режим «только просмотр». Все поля и кнопки внутри отключаются средствами HTML (fieldset disabled),
+ * ссылки продолжают работать. Это удобство: настоящая защита — проверка права на сервере.
+ */
+export function ReadOnlyGate({ readOnly, children }: { readOnly: boolean; children: React.ReactNode }) {
+  if (!readOnly) return <>{children}</>
+  return (
+    <>
+      <p className="mb-6 rounded-2xl border border-line bg-surface-2 px-5 py-3 text-sm text-ink-2" role="note">
+        Только просмотр. Менять это может управляющий или владелец.
+      </p>
+      <fieldset disabled className="contents">
+        {children}
+      </fieldset>
+    </>
+  )
+}

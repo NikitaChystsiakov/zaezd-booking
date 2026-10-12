@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import type { Role } from '@prisma/client'
 import { prisma } from './prisma'
 import { verifyJwt, getCookieName, signJwt } from './jwt'
+import { can, type Permission } from './permissions'
 
 export type Session = {
   userId: string
@@ -37,6 +38,17 @@ export const requireSession = cache(async (): Promise<Session> => {
   if (!user || user.propertyId !== session.propertyId) redirect('/logout')
   return { userId: user.id, propertyId: user.propertyId, role: user.role }
 })
+
+/**
+ * Сессия плюс проверка права. Нет права — на страницу «Нет доступа», ничего не меняется.
+ * Вызывается в начале каждого действия и страницы, для которых нужно право: скрытые в интерфейсе
+ * кнопки защитой не считаются.
+ */
+export async function requirePermission(permission: Permission): Promise<Session> {
+  const session = await requireSession()
+  if (!can(session.role, permission)) redirect('/admin/forbidden')
+  return session
+}
 
 export async function startSession(user: { id: string; propertyId: string; role: Role }) {
   const token = await signJwt({ sub: user.id, propertyId: user.propertyId, role: user.role })
